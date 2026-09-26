@@ -240,6 +240,17 @@ def build_reconnected(room: TimelineRoom, player: Player) -> dict:
     }
 
 
+def build_themes(themes: list[str]) -> dict:
+    """Reply to list_themes: the deck/playlist themes actually playable
+    right now (see server/deck/loader.py's available_themes) — the
+    create-room screen uses this to only ever offer a playlist that won't
+    immediately fail to start a room."""
+    return {
+        "type": "themes",
+        "themes": themes,
+    }
+
+
 def build_error(message: str) -> dict:
     """A clean rejection response — malformed message, wrong phase, wrong
     turn, invalid token, etc. Never let the client see a raw exception.

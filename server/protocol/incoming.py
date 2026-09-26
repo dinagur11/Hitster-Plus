@@ -22,9 +22,22 @@ class InvalidIncomingMessageError(Exception):
     """Raised for malformed JSON, a missing/invalid field, or an unknown message type."""
 
 
+class ListThemesMessage(BaseModel):
+    """No fields: asks the server which deck/playlist themes are actually
+    playable right now (see server/deck/loader.py's available_themes) —
+    sent by the client's create-room screen so it only ever offers a
+    playlist it can actually start a room with."""
+
+    type: Literal["list_themes"] = "list_themes"
+
+
 class CreateRoomMessage(BaseModel):
     type: Literal["create_room"] = "create_room"
     player_name: str
+    # Deck/playlist to play with ("general", "rock", "pop", ...). None
+    # defaults to "general" in RoomManager.create_room — validated there,
+    # not here, since the set of known themes is deck/loader.py's concern.
+    theme: str | None = None
 
 
 class StartGameMessage(BaseModel):
@@ -96,6 +109,7 @@ class MashupPreviewMessage(BaseModel):
 
 IncomingMessage = Annotated[
     Union[
+        ListThemesMessage,
         CreateRoomMessage,
         StartGameMessage,
         JoinRoomMessage,

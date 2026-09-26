@@ -17,6 +17,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from server.config import CAPPED_WIN_TIMELINE_LENGTH
 from server.models.card import Card
 from server.models.enums import RoundType, TimelinePhase
 from server.rooms.room_manager import RoomManager
@@ -288,6 +289,30 @@ async def test_create_room_dispatch_creates_room_and_attaches_connection():
     assert joined["is_host"] is True
     assert room.host_id == joined["player_id"]
     assert handler.connections["conn-host"] is ws
+
+
+async def test_create_room_dispatch_honors_requested_theme():
+    manager = RoomManager()
+    handler = WsHandler(manager)
+    ws = FakeWebSocket()
+
+    await send_raw(handler, "conn-host", ws, {"type": "create_room", "player_name": "Alice", "theme": "rock"})
+
+    joined = next(m for m in ws.sent if m["type"] == "joined")
+    room = manager.rooms[joined["room_code"]]
+    assert room.theme == "rock"
+    assert room.win_timeline_length == CAPPED_WIN_TIMELINE_LENGTH
+
+
+async def test_create_room_dispatch_rejects_unknown_theme():
+    manager = RoomManager()
+    handler = WsHandler(manager)
+    ws = FakeWebSocket()
+
+    await send_raw(handler, "conn-host", ws, {"type": "create_room", "player_name": "Alice", "theme": "jazz"})
+
+    assert ws.types_sent() == ["error"]
+    assert manager.rooms == {}
 
 
 async def test_start_game_rejected_for_non_host():

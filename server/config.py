@@ -26,8 +26,12 @@ STEAL_WINDOW_ALL_SKIPPED_DELAY_SECONDS = 5
 REVEAL_SECONDS = 10
 
 # First player to reach this many cards on their own timeline wins the
-# game outright — per CLAUDE.md's settled win condition.
+# game outright — per CLAUDE.md's settled win condition. This is the
+# "general" theme's win length; a themed (non-general) deck is smaller, so
+# it caps at CAPPED_WIN_TIMELINE_LENGTH instead — see
+# RoomManager.create_room, which picks between the two by theme name.
 WIN_TIMELINE_LENGTH = 10
+CAPPED_WIN_TIMELINE_LENGTH = 5
 
 MAX_HINT_SLOTS = 3
 HINT_TOKEN_COST_PER_SLOT = 1

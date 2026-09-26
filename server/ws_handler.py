@@ -19,6 +19,7 @@ from websockets.asyncio.server import ServerConnection
 from websockets.exceptions import ConnectionClosed
 
 from server.config import DISCONNECT_SWEEP_INTERVAL_SECONDS
+from server.deck.loader import available_themes
 from server.game_logic import placement
 from server.models.enums import RoundType, TimelinePhase
 from server.models.player import Player
@@ -27,6 +28,7 @@ from server.protocol.incoming import (
     FinishTurnMessage,
     InvalidIncomingMessageError,
     JoinRoomMessage,
+    ListThemesMessage,
     MashupPlacementMessage,
     MashupPreviewMessage,
     PlaceCardMessage,
@@ -48,8 +50,15 @@ from server.protocol.outgoing import (
     build_reveal,
     build_state_update,
     build_steal_window_open,
+    build_themes,
 )
-from server.rooms.errors import IllegalActionError, InvalidReconnectTokenError, RoomNotFoundError, RoomNotJoinableError
+from server.rooms.errors import (
+    IllegalActionError,
+    InvalidReconnectTokenError,
+    InvalidThemeError,
+    RoomNotFoundError,
+    RoomNotJoinableError,
+)
 from server.rooms.room_manager import RoomManager
 from server.rooms.timeline_room import TimelineRoom
 
@@ -98,8 +107,16 @@ class WsHandler:
 
     # -- create / join / reconnect -----------------------------------------------
 
+    async def _handle_list_themes(self, connection_id: str, websocket: ServerConnection, message: ListThemesMessage) -> None:
+        await self._send(websocket, build_themes(available_themes()))
+
     async def _handle_create_room(self, connection_id: str, websocket: ServerConnection, message: CreateRoomMessage) -> None:
-        room, player, token = self.room_manager.create_room(message.player_name)
+        try:
+            room, player, token = self.room_manager.create_room(message.player_name, theme=message.theme)
+        except InvalidThemeError as exc:
+            await self._send(websocket, build_error(str(exc)))
+            return
+
         self._attach_connection(connection_id, websocket, room.room_id, player)
         await self._send(websocket, build_joined(room, player, token))
         await self._broadcast_state(room)
@@ -486,6 +503,7 @@ class WsHandler:
 
 
 WsHandler._MESSAGE_HANDLERS = {
+    ListThemesMessage: WsHandler._handle_list_themes,
     CreateRoomMessage: WsHandler._handle_create_room,
     StartGameMessage: WsHandler._handle_start_game,
     JoinRoomMessage: WsHandler._handle_join_room,

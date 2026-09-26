@@ -38,6 +38,11 @@ export function LiveLobbyFlow() {
   const [room, setRoom] = useState<LobbyRoomView | null>(null);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Null until the "themes" reply lands (requested on entering the create
+  // screen) — CreateRoomScreen treats null as "still loading" and only
+  // ever offers a playlist the server just confirmed it can actually play
+  // (see server/deck/loader.py's available_themes).
+  const [availableThemes, setAvailableThemes] = useState<string[] | null>(null);
   // The exact state_update that flips lifecycle to in_progress — captured
   // here and handed to LiveGameFlow as its seed, since LiveGameFlow's own
   // subscription only starts once it mounts (one render after this
@@ -71,15 +76,18 @@ export function LiveLobbyFlow() {
           setError(message.message);
           setStarting(false);
           break;
+        case "themes":
+          setAvailableThemes(message.themes);
+          break;
         default:
           break;
       }
     });
   }, [subscribe]);
 
-  const handleCreate = (displayName: string) => {
+  const handleCreate = (displayName: string, theme: string) => {
     setError(null);
-    send({ type: "create_room", player_name: displayName });
+    send({ type: "create_room", player_name: displayName, theme });
   };
 
   const handleJoin = (displayName: string, roomCode: string) => {
@@ -103,8 +111,21 @@ export function LiveLobbyFlow() {
 
   const handleEnterCreate = () => {
     ensureConnected();
+    setAvailableThemes(null);
     setScreen("create");
   };
+
+  // Fires list_themes once the socket is actually open, not right on
+  // handleEnterCreate's click — ensureConnected's connect() is async, so a
+  // send() issued immediately after it (e.g. right after handleGoHome had
+  // torn the connection down) would silently no-op against a socket that
+  // isn't OPEN yet (see GameSocket.send). Re-fires harmlessly if the
+  // connection drops and comes back while still on the create screen.
+  useEffect(() => {
+    if (screen === "create" && status === "open") {
+      send({ type: "list_themes" });
+    }
+  }, [screen, status, send]);
 
   const handleEnterJoin = () => {
     ensureConnected();
@@ -172,7 +193,12 @@ export function LiveLobbyFlow() {
       <div>
         {statusBanner}
         {errorBanner}
-        <CreateRoomScreen onCreate={handleCreate} onSwitchToJoin={handleEnterJoin} onWordmarkClick={handleGoHome} />
+        <CreateRoomScreen
+          onCreate={handleCreate}
+          onSwitchToJoin={handleEnterJoin}
+          onWordmarkClick={handleGoHome}
+          availableThemes={availableThemes}
+        />
       </div>
     );
   }

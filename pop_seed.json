@@ -1,52 +1,680 @@
 [
-    {"title": "It's Now or Never", "artist": "Elvis Presley", "year": 1960, "genre": "pop"},
-    {"title": "Can't Help Falling in Love", "artist": "Elvis Presley", "year": 1961, "genre": "pop"},
-    {"title": "Stand by Me", "artist": "Ben E. King", "year": 1961, "genre": "pop"},
-    {"title": "I Want to Hold Your Hand", "artist": "The Beatles", "year": 1963, "genre": "pop"},
-    {"title": "Dancing in the Street", "artist": "Martha and the Vandellas", "year": 1964, "genre": "soul pop"},
-    {"title": "You Can't Hurry Love", "artist": "The Supremes", "year": 1966, "genre": "pop"},
-    {"title": "My Girl", "artist": "The Temptations", "year": 1964, "genre": "soul pop"},
-    {"title": "Build Me Up Buttercup", "artist": "The Foundations", "year": 1968, "genre": "pop"},
-    {"title": "Mamma Mia", "artist": "ABBA", "year": 1975, "genre": "pop"},
-    {"title": "Dancing Queen", "artist": "ABBA", "year": 1976, "genre": "pop"},
-    {"title": "Stayin' Alive", "artist": "Bee Gees", "year": 1977, "genre": "disco pop"},
-    {"title": "September", "artist": "Earth, Wind & Fire", "year": 1978, "genre": "disco pop"},
-    {"title": "I Will Survive", "artist": "Gloria Gaynor", "year": 1978, "genre": "disco pop"},
-    {"title": "Girls Just Want to Have Fun", "artist": "Cyndi Lauper", "year": 1983, "genre": "pop"},
-    {"title": "Like a Virgin", "artist": "Madonna", "year": 1984, "genre": "pop"},
-    {"title": "Take on Me", "artist": "a-ha", "year": 1985, "genre": "synth-pop"},
-    {"title": "Careless Whisper", "artist": "George Michael", "year": 1984, "genre": "pop"},
-    {"title": "Never Gonna Give You Up", "artist": "Rick Astley", "year": 1987, "genre": "synth-pop"},
-    {"title": "Man in the Mirror", "artist": "Michael Jackson", "year": 1988, "genre": "pop"},
-    {"title": "Like a Prayer", "artist": "Madonna", "year": 1989, "genre": "pop"},
-    {"title": "Vogue", "artist": "Madonna", "year": 1990, "genre": "dance-pop"},
-    {"title": "I Want It That Way", "artist": "Backstreet Boys", "year": 1999, "genre": "pop"},
-    {"title": "...Baby One More Time", "artist": "Britney Spears", "year": 1998, "genre": "teen pop"},
-    {"title": "Genie in a Bottle", "artist": "Christina Aguilera", "year": 1999, "genre": "teen pop"},
-    {"title": "Torn", "artist": "Natalie Imbruglia", "year": 1997, "genre": "pop"},
-    {"title": "Believe", "artist": "Cher", "year": 1998, "genre": "dance-pop"},
-    {"title": "Whenever, Wherever", "artist": "Shakira", "year": 2001, "genre": "Latin pop"},
-    {"title": "Crazy in Love", "artist": "Beyoncé", "year": 2003, "genre": "pop"},
-    {"title": "Toxic", "artist": "Britney Spears", "year": 2003, "genre": "dance-pop"},
-    {"title": "Hips Don't Lie", "artist": "Shakira", "year": 2006, "genre": "Latin pop"},
-    {"title": "Umbrella", "artist": "Rihanna", "year": 2007, "genre": "pop"},
-    {"title": "Poker Face", "artist": "Lady Gaga", "year": 2008, "genre": "dance-pop"},
-    {"title": "Bad Romance", "artist": "Lady Gaga", "year": 2009, "genre": "dance-pop"},
-    {"title": "Just the Way You Are", "artist": "Bruno Mars", "year": 2010, "genre": "pop"},
-    {"title": "Rolling in the Deep", "artist": "Adele", "year": 2010, "genre": "soul pop"},
-    {"title": "Call Me Maybe", "artist": "Carly Rae Jepsen", "year": 2011, "genre": "pop"},
-    {"title": "Get Lucky", "artist": "Daft Punk", "year": 2013, "genre": "funk pop"},
-    {"title": "Happy", "artist": "Pharrell Williams", "year": 2013, "genre": "pop"},
-    {"title": "Shake It Off", "artist": "Taylor Swift", "year": 2014, "genre": "pop"},
-    {"title": "Uptown Funk", "artist": "Mark Ronson", "year": 2014, "genre": "funk pop"},
-    {"title": "Shape of You", "artist": "Ed Sheeran", "year": 2017, "genre": "pop"},
-    {"title": "Havana", "artist": "Camila Cabello", "year": 2017, "genre": "Latin pop"},
-    {"title": "Blinding Lights", "artist": "The Weeknd", "year": 2019, "genre": "synth-pop"},
-    {"title": "Levitating", "artist": "Dua Lipa", "year": 2020, "genre": "dance-pop"},
-    {"title": "As It Was", "artist": "Harry Styles", "year": 2022, "genre": "synth-pop"},
-    {"title": "Flowers", "artist": "Miley Cyrus", "year": 2023, "genre": "pop"},
-    {"title": "Anti-Hero", "artist": "Taylor Swift", "year": 2022, "genre": "pop"},
-    {"title": "Espresso", "artist": "Sabrina Carpenter", "year": 2024, "genre": "pop"},
-    {"title": "Beautiful Things", "artist": "Benson Boone", "year": 2024, "genre": "pop"},
-    {"title": "APT.", "artist": "ROSÉ & Bruno Mars", "year": 2024, "genre": "pop"}
+  {
+    "title": "Over the Rainbow",
+    "artist": "Judy Garland",
+    "year": 1939,
+    "genre": "pop standard"
+  },
+  {
+    "title": "White Christmas",
+    "artist": "Bing Crosby",
+    "year": 1942,
+    "genre": "pop standard"
+  },
+  {
+    "title": "La Vie en Rose",
+    "artist": "Edith Piaf",
+    "year": 1947,
+    "genre": "pop standard"
+  },
+  {
+    "title": "Unforgettable",
+    "artist": "Nat King Cole",
+    "year": 1951,
+    "genre": "pop standard"
+  },
+  {
+    "title": "Mr. Sandman",
+    "artist": "The Chordettes",
+    "year": 1954,
+    "genre": "pop"
+  },
+  {
+    "title": "Only You (And You Alone)",
+    "artist": "The Platters",
+    "year": 1955,
+    "genre": "pop"
+  },
+  {
+    "title": "Love Me Tender",
+    "artist": "Elvis Presley",
+    "year": 1956,
+    "genre": "pop"
+  },
+  {
+    "title": "Great Balls of Fire",
+    "artist": "Jerry Lee Lewis",
+    "year": 1957,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "Come Fly with Me",
+    "artist": "Frank Sinatra",
+    "year": 1958,
+    "genre": "traditional pop"
+  },
+  {
+    "title": "Mack the Knife",
+    "artist": "Bobby Darin",
+    "year": 1959,
+    "genre": "traditional pop"
+  },
+  {
+    "title": "It's Now or Never",
+    "artist": "Elvis Presley",
+    "year": 1960,
+    "genre": "pop"
+  },
+  {
+    "title": "The Twist",
+    "artist": "Chubby Checker",
+    "year": 1960,
+    "genre": "pop"
+  },
+  {
+    "title": "Can't Help Falling in Love",
+    "artist": "Elvis Presley",
+    "year": 1961,
+    "genre": "pop"
+  },
+  {
+    "title": "Stand by Me",
+    "artist": "Ben E. King",
+    "year": 1961,
+    "genre": "pop"
+  },
+  {
+    "title": "Runaway",
+    "artist": "Del Shannon",
+    "year": 1961,
+    "genre": "pop"
+  },
+  {
+    "title": "I Want to Hold Your Hand",
+    "artist": "The Beatles",
+    "year": 1963,
+    "genre": "pop"
+  },
+  {
+    "title": "Da Doo Ron Ron",
+    "artist": "The Crystals",
+    "year": 1963,
+    "genre": "pop"
+  },
+  {
+    "title": "Dancing in the Street",
+    "artist": "Martha and the Vandellas",
+    "year": 1964,
+    "genre": "soul pop"
+  },
+  {
+    "title": "My Girl",
+    "artist": "The Temptations",
+    "year": 1964,
+    "genre": "soul pop"
+  },
+  {
+    "title": "You've Lost That Lovin' Feelin'",
+    "artist": "The Righteous Brothers",
+    "year": 1964,
+    "genre": "pop"
+  },
+  {
+    "title": "California Girls",
+    "artist": "The Beach Boys",
+    "year": 1965,
+    "genre": "pop"
+  },
+  {
+    "title": "You Can't Hurry Love",
+    "artist": "The Supremes",
+    "year": 1966,
+    "genre": "pop"
+  },
+  {
+    "title": "Good Vibrations",
+    "artist": "The Beach Boys",
+    "year": 1966,
+    "genre": "pop"
+  },
+  {
+    "title": "Respect",
+    "artist": "Aretha Franklin",
+    "year": 1967,
+    "genre": "soul pop"
+  },
+  {
+    "title": "Build Me Up Buttercup",
+    "artist": "The Foundations",
+    "year": 1968,
+    "genre": "pop"
+  },
+  {
+    "title": "Hey Jude",
+    "artist": "The Beatles",
+    "year": 1968,
+    "genre": "pop"
+  },
+  {
+    "title": "Sugar, Sugar",
+    "artist": "The Archies",
+    "year": 1969,
+    "genre": "bubblegum pop"
+  },
+  {
+    "title": "I Want You Back",
+    "artist": "The Jackson 5",
+    "year": 1970,
+    "genre": "pop"
+  },
+  {
+    "title": "Bridge Over Troubled Water",
+    "artist": "Simon & Garfunkel",
+    "year": 1970,
+    "genre": "pop"
+  },
+  {
+    "title": "American Pie",
+    "artist": "Don McLean",
+    "year": 1971,
+    "genre": "pop"
+  },
+  {
+    "title": "Killing Me Softly with His Song",
+    "artist": "Roberta Flack",
+    "year": 1973,
+    "genre": "pop"
+  },
+  {
+    "title": "Waterloo",
+    "artist": "ABBA",
+    "year": 1974,
+    "genre": "pop"
+  },
+  {
+    "title": "Mamma Mia",
+    "artist": "ABBA",
+    "year": 1975,
+    "genre": "pop"
+  },
+  {
+    "title": "Rhinestone Cowboy",
+    "artist": "Glen Campbell",
+    "year": 1975,
+    "genre": "pop"
+  },
+  {
+    "title": "Dancing Queen",
+    "artist": "ABBA",
+    "year": 1976,
+    "genre": "pop"
+  },
+  {
+    "title": "Stayin' Alive",
+    "artist": "Bee Gees",
+    "year": 1977,
+    "genre": "disco pop"
+  },
+  {
+    "title": "How Deep Is Your Love",
+    "artist": "Bee Gees",
+    "year": 1977,
+    "genre": "pop"
+  },
+  {
+    "title": "September",
+    "artist": "Earth, Wind & Fire",
+    "year": 1978,
+    "genre": "disco pop"
+  },
+  {
+    "title": "I Will Survive",
+    "artist": "Gloria Gaynor",
+    "year": 1978,
+    "genre": "disco pop"
+  },
+  {
+    "title": "Y.M.C.A.",
+    "artist": "Village People",
+    "year": 1978,
+    "genre": "disco pop"
+  },
+  {
+    "title": "My Sharona",
+    "artist": "The Knack",
+    "year": 1979,
+    "genre": "pop rock"
+  },
+  {
+    "title": "Endless Love",
+    "artist": "Diana Ross & Lionel Richie",
+    "year": 1981,
+    "genre": "pop"
+  },
+  {
+    "title": "Physical",
+    "artist": "Olivia Newton-John",
+    "year": 1981,
+    "genre": "pop"
+  },
+  {
+    "title": "Africa",
+    "artist": "Toto",
+    "year": 1982,
+    "genre": "pop rock"
+  },
+  {
+    "title": "Girls Just Want to Have Fun",
+    "artist": "Cyndi Lauper",
+    "year": 1983,
+    "genre": "pop"
+  },
+  {
+    "title": "Billie Jean",
+    "artist": "Michael Jackson",
+    "year": 1983,
+    "genre": "pop"
+  },
+  {
+    "title": "Karma Chameleon",
+    "artist": "Culture Club",
+    "year": 1983,
+    "genre": "pop"
+  },
+  {
+    "title": "Like a Virgin",
+    "artist": "Madonna",
+    "year": 1984,
+    "genre": "pop"
+  },
+  {
+    "title": "Careless Whisper",
+    "artist": "George Michael",
+    "year": 1984,
+    "genre": "pop"
+  },
+  {
+    "title": "Take on Me",
+    "artist": "a-ha",
+    "year": 1985,
+    "genre": "synth-pop"
+  },
+  {
+    "title": "Papa Don't Preach",
+    "artist": "Madonna",
+    "year": 1986,
+    "genre": "pop"
+  },
+  {
+    "title": "Livin' on a Prayer",
+    "artist": "Bon Jovi",
+    "year": 1986,
+    "genre": "pop rock"
+  },
+  {
+    "title": "Never Gonna Give You Up",
+    "artist": "Rick Astley",
+    "year": 1987,
+    "genre": "synth-pop"
+  },
+  {
+    "title": "Faith",
+    "artist": "George Michael",
+    "year": 1987,
+    "genre": "pop"
+  },
+  {
+    "title": "I Wanna Dance with Somebody",
+    "artist": "Whitney Houston",
+    "year": 1987,
+    "genre": "pop"
+  },
+  {
+    "title": "Man in the Mirror",
+    "artist": "Michael Jackson",
+    "year": 1988,
+    "genre": "pop"
+  },
+  {
+    "title": "Like a Prayer",
+    "artist": "Madonna",
+    "year": 1989,
+    "genre": "pop"
+  },
+  {
+    "title": "Vogue",
+    "artist": "Madonna",
+    "year": 1990,
+    "genre": "dance-pop"
+  },
+  {
+    "title": "Nothing Compares 2 U",
+    "artist": "Sinead O'Connor",
+    "year": 1990,
+    "genre": "pop"
+  },
+  {
+    "title": "I Will Always Love You",
+    "artist": "Whitney Houston",
+    "year": 1992,
+    "genre": "pop"
+  },
+  {
+    "title": "Waterfalls",
+    "artist": "TLC",
+    "year": 1995,
+    "genre": "r&b pop"
+  },
+  {
+    "title": "Wannabe",
+    "artist": "Spice Girls",
+    "year": 1996,
+    "genre": "pop"
+  },
+  {
+    "title": "Torn",
+    "artist": "Natalie Imbruglia",
+    "year": 1997,
+    "genre": "pop"
+  },
+  {
+    "title": "MMMBop",
+    "artist": "Hanson",
+    "year": 1997,
+    "genre": "pop"
+  },
+  {
+    "title": "...Baby One More Time",
+    "artist": "Britney Spears",
+    "year": 1998,
+    "genre": "teen pop"
+  },
+  {
+    "title": "Believe",
+    "artist": "Cher",
+    "year": 1998,
+    "genre": "dance-pop"
+  },
+  {
+    "title": "I Want It That Way",
+    "artist": "Backstreet Boys",
+    "year": 1999,
+    "genre": "pop"
+  },
+  {
+    "title": "Genie in a Bottle",
+    "artist": "Christina Aguilera",
+    "year": 1999,
+    "genre": "teen pop"
+  },
+  {
+    "title": "Livin' la Vida Loca",
+    "artist": "Ricky Martin",
+    "year": 1999,
+    "genre": "Latin pop"
+  },
+  {
+    "title": "Oops!... I Did It Again",
+    "artist": "Britney Spears",
+    "year": 2000,
+    "genre": "pop"
+  },
+  {
+    "title": "It's Gonna Be Me",
+    "artist": "*NSYNC",
+    "year": 2000,
+    "genre": "pop"
+  },
+  {
+    "title": "Whenever, Wherever",
+    "artist": "Shakira",
+    "year": 2001,
+    "genre": "Latin pop"
+  },
+  {
+    "title": "Crazy in Love",
+    "artist": "Beyoncé",
+    "year": 2003,
+    "genre": "pop"
+  },
+  {
+    "title": "Toxic",
+    "artist": "Britney Spears",
+    "year": 2003,
+    "genre": "dance-pop"
+  },
+  {
+    "title": "Since U Been Gone",
+    "artist": "Kelly Clarkson",
+    "year": 2004,
+    "genre": "pop rock"
+  },
+  {
+    "title": "Hips Don't Lie",
+    "artist": "Shakira",
+    "year": 2006,
+    "genre": "Latin pop"
+  },
+  {
+    "title": "SexyBack",
+    "artist": "Justin Timberlake",
+    "year": 2006,
+    "genre": "pop"
+  },
+  {
+    "title": "Umbrella",
+    "artist": "Rihanna",
+    "year": 2007,
+    "genre": "pop"
+  },
+  {
+    "title": "Bleeding Love",
+    "artist": "Leona Lewis",
+    "year": 2007,
+    "genre": "pop"
+  },
+  {
+    "title": "Poker Face",
+    "artist": "Lady Gaga",
+    "year": 2008,
+    "genre": "dance-pop"
+  },
+  {
+    "title": "Bad Romance",
+    "artist": "Lady Gaga",
+    "year": 2009,
+    "genre": "dance-pop"
+  },
+  {
+    "title": "I Gotta Feeling",
+    "artist": "The Black Eyed Peas",
+    "year": 2009,
+    "genre": "dance pop"
+  },
+  {
+    "title": "Just the Way You Are",
+    "artist": "Bruno Mars",
+    "year": 2010,
+    "genre": "pop"
+  },
+  {
+    "title": "Rolling in the Deep",
+    "artist": "Adele",
+    "year": 2010,
+    "genre": "soul pop"
+  },
+  {
+    "title": "Call Me Maybe",
+    "artist": "Carly Rae Jepsen",
+    "year": 2011,
+    "genre": "pop"
+  },
+  {
+    "title": "Somebody That I Used to Know",
+    "artist": "Gotye",
+    "year": 2011,
+    "genre": "pop"
+  },
+  {
+    "title": "Get Lucky",
+    "artist": "Daft Punk",
+    "year": 2013,
+    "genre": "funk pop"
+  },
+  {
+    "title": "Happy",
+    "artist": "Pharrell Williams",
+    "year": 2013,
+    "genre": "pop"
+  },
+  {
+    "title": "Blurred Lines",
+    "artist": "Robin Thicke",
+    "year": 2013,
+    "genre": "pop"
+  },
+  {
+    "title": "Shake It Off",
+    "artist": "Taylor Swift",
+    "year": 2014,
+    "genre": "pop"
+  },
+  {
+    "title": "Uptown Funk",
+    "artist": "Mark Ronson",
+    "year": 2014,
+    "genre": "funk pop"
+  },
+  {
+    "title": "All About That Bass",
+    "artist": "Meghan Trainor",
+    "year": 2014,
+    "genre": "pop"
+  },
+  {
+    "title": "Can't Stop the Feeling!",
+    "artist": "Justin Timberlake",
+    "year": 2016,
+    "genre": "pop"
+  },
+  {
+    "title": "Shape of You",
+    "artist": "Ed Sheeran",
+    "year": 2017,
+    "genre": "pop"
+  },
+  {
+    "title": "Havana",
+    "artist": "Camila Cabello",
+    "year": 2017,
+    "genre": "Latin pop"
+  },
+  {
+    "title": "Despacito",
+    "artist": "Luis Fonsi",
+    "year": 2017,
+    "genre": "Latin pop"
+  },
+  {
+    "title": "Thank U, Next",
+    "artist": "Ariana Grande",
+    "year": 2018,
+    "genre": "pop"
+  },
+  {
+    "title": "Blinding Lights",
+    "artist": "The Weeknd",
+    "year": 2019,
+    "genre": "synth-pop"
+  },
+  {
+    "title": "Old Town Road",
+    "artist": "Lil Nas X",
+    "year": 2019,
+    "genre": "pop"
+  },
+  {
+    "title": "Bad Guy",
+    "artist": "Billie Eilish",
+    "year": 2019,
+    "genre": "pop"
+  },
+  {
+    "title": "Levitating",
+    "artist": "Dua Lipa",
+    "year": 2020,
+    "genre": "dance-pop"
+  },
+  {
+    "title": "drivers license",
+    "artist": "Olivia Rodrigo",
+    "year": 2021,
+    "genre": "pop"
+  },
+  {
+    "title": "Stay",
+    "artist": "The Kid LAROI & Justin Bieber",
+    "year": 2021,
+    "genre": "pop"
+  },
+  {
+    "title": "As It Was",
+    "artist": "Harry Styles",
+    "year": 2022,
+    "genre": "synth-pop"
+  },
+  {
+    "title": "Anti-Hero",
+    "artist": "Taylor Swift",
+    "year": 2022,
+    "genre": "pop"
+  },
+  {
+    "title": "About Damn Time",
+    "artist": "Lizzo",
+    "year": 2022,
+    "genre": "pop"
+  },
+  {
+    "title": "Unholy",
+    "artist": "Sam Smith",
+    "year": 2022,
+    "genre": "pop"
+  },
+  {
+    "title": "Flowers",
+    "artist": "Miley Cyrus",
+    "year": 2023,
+    "genre": "pop"
+  },
+  {
+    "title": "Paint The Town Red",
+    "artist": "Doja Cat",
+    "year": 2023,
+    "genre": "pop"
+  },
+  {
+    "title": "Espresso",
+    "artist": "Sabrina Carpenter",
+    "year": 2024,
+    "genre": "pop"
+  },
+  {
+    "title": "Beautiful Things",
+    "artist": "Benson Boone",
+    "year": 2024,
+    "genre": "pop"
+  },
+  {
+    "title": "APT.",
+    "artist": "ROSÉ & Bruno Mars",
+    "year": 2024,
+    "genre": "pop"
+  },
+  {
+    "title": "Die With A Smile",
+    "artist": "Lady Gaga & Bruno Mars",
+    "year": 2024,
+    "genre": "pop"
+  }
 ]

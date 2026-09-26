@@ -100,6 +100,12 @@ class TimelineRoom(GameRoom):
     skipped_stealers: set[str] = field(default_factory=set)
     last_reveal: TimelineRevealSummary | None = None
     rng: random.Random = field(default_factory=random.Random)
+    # How many timeline cards it takes to win this room's game — defaults
+    # to the general theme's WIN_TIMELINE_LENGTH, but RoomManager.create_room
+    # passes CAPPED_WIN_TIMELINE_LENGTH instead for a non-general theme
+    # (smaller deck, shorter game). Per-room rather than a module constant
+    # so the two theme sizes can coexist across concurrent rooms.
+    win_timeline_length: int = WIN_TIMELINE_LENGTH
     # Set once, the moment a player's timeline reaches WIN_TIMELINE_LENGTH —
     # the room-level game winner, distinct from TimelineRevealSummary's own
     # winner_player_id, which is just who won a single round's card. Stays
@@ -181,7 +187,7 @@ class TimelineRoom(GameRoom):
         """
         if candidate_player_id is None:
             return False
-        if len(self._player(candidate_player_id).timeline) < WIN_TIMELINE_LENGTH:
+        if len(self._player(candidate_player_id).timeline) < self.win_timeline_length:
             return False
         self.lifecycle = RoomLifecycle.FINISHED
         self.game_winner_id = candidate_player_id

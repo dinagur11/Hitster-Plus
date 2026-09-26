@@ -50,9 +50,22 @@ export type WireOutcome = "correct" | "incorrect";
 
 // -- outgoing (client -> server) — server/protocol/incoming.py ---------------
 
+/** No fields: asks which deck/playlist themes are actually playable right
+ * now (server/deck/loader.py's available_themes) — a theme can be
+ * registered but not yet have its deck file built, so the create-room
+ * screen asks rather than assuming a fixed list. */
+export interface ListThemesMessage {
+  type: "list_themes";
+}
+
 export interface CreateRoomMessage {
   type: "create_room";
   player_name: string;
+  // Deck/playlist to play with ("general", "rock", "pop", ...). Omitted
+  // (or "general") plays the full deck at the standard 10-card win length;
+  // any other theme is a smaller playlist capped at 5 — see
+  // server/rooms/room_manager.py's create_room.
+  theme?: string;
 }
 
 export interface StartGameMessage {
@@ -118,6 +131,7 @@ export interface MashupPreviewMessage {
 }
 
 export type OutgoingMessage =
+  | ListThemesMessage
   | CreateRoomMessage
   | StartGameMessage
   | JoinRoomMessage
@@ -248,6 +262,12 @@ export interface HintResponseMessage {
   grayed_out_slots: number[];
 }
 
+/** Reply to list_themes — the playlists actually playable right now. */
+export interface ThemesMessage {
+  type: "themes";
+  themes: string[];
+}
+
 export type IncomingMessage =
   | JoinedMessage
   | ReconnectedMessage
@@ -257,4 +277,5 @@ export type IncomingMessage =
   | MashupPreviewBroadcastMessage
   | StealWindowOpenMessage
   | RevealMessage
-  | HintResponseMessage;
+  | HintResponseMessage
+  | ThemesMessage;

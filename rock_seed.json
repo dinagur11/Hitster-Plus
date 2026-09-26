@@ -1,52 +1,590 @@
 [
-    {"title": "Johnny B. Goode", "artist": "Chuck Berry", "year": 1958, "genre": "rock and roll"},
-    {"title": "Hound Dog", "artist": "Elvis Presley", "year": 1956, "genre": "rock and roll"},
-    {"title": "Tutti Frutti", "artist": "Little Richard", "year": 1955, "genre": "rock and roll"},
-    {"title": "Great Balls of Fire", "artist": "Jerry Lee Lewis", "year": 1957, "genre": "rock and roll"},
-    {"title": "You Really Got Me", "artist": "The Kinks", "year": 1964, "genre": "rock"},
-    {"title": "I Can't Get No Satisfaction", "artist": "The Rolling Stones", "year": 1965, "genre": "rock"},
-    {"title": "Sunshine of Your Love", "artist": "Cream", "year": 1967, "genre": "psychedelic rock"},
-    {"title": "Purple Haze", "artist": "The Jimi Hendrix Experience", "year": 1967, "genre": "psychedelic rock"},
-    {"title": "Born to Be Wild", "artist": "Steppenwolf", "year": 1968, "genre": "hard rock"},
-    {"title": "Whole Lotta Love", "artist": "Led Zeppelin", "year": 1969, "genre": "hard rock"},
-    {"title": "Paranoid", "artist": "Black Sabbath", "year": 1970, "genre": "heavy metal"},
-    {"title": "Smoke on the Water", "artist": "Deep Purple", "year": 1972, "genre": "hard rock"},
-    {"title": "Stairway to Heaven", "artist": "Led Zeppelin", "year": 1971, "genre": "rock"},
-    {"title": "Dream On", "artist": "Aerosmith", "year": 1973, "genre": "hard rock"},
-    {"title": "Bohemian Rhapsody", "artist": "Queen", "year": 1975, "genre": "rock"},
-    {"title": "Hotel California", "artist": "Eagles", "year": 1976, "genre": "rock"},
-    {"title": "Go Your Own Way", "artist": "Fleetwood Mac", "year": 1977, "genre": "rock"},
-    {"title": "We Will Rock You", "artist": "Queen", "year": 1977, "genre": "arena rock"},
-    {"title": "Sultans of Swing", "artist": "Dire Straits", "year": 1978, "genre": "rock"},
-    {"title": "Highway to Hell", "artist": "AC/DC", "year": 1979, "genre": "hard rock"},
-    {"title": "Another One Bites the Dust", "artist": "Queen", "year": 1980, "genre": "rock"},
-    {"title": "Back in Black", "artist": "AC/DC", "year": 1980, "genre": "hard rock"},
-    {"title": "Don't Stop Believin'", "artist": "Journey", "year": 1981, "genre": "arena rock"},
-    {"title": "Every Breath You Take", "artist": "The Police", "year": 1983, "genre": "rock"},
-    {"title": "Jump", "artist": "Van Halen", "year": 1984, "genre": "hard rock"},
-    {"title": "Sweet Child o' Mine", "artist": "Guns N' Roses", "year": 1987, "genre": "hard rock"},
-    {"title": "With or Without You", "artist": "U2", "year": 1987, "genre": "rock"},
-    {"title": "Pour Some Sugar on Me", "artist": "Def Leppard", "year": 1987, "genre": "hard rock"},
-    {"title": "The Final Countdown", "artist": "Europe", "year": 1986, "genre": "hard rock"},
-    {"title": "Smells Like Teen Spirit", "artist": "Nirvana", "year": 1991, "genre": "grunge"},
-    {"title": "Under the Bridge", "artist": "Red Hot Chili Peppers", "year": 1991, "genre": "alternative rock"},
-    {"title": "Alive", "artist": "Pearl Jam", "year": 1991, "genre": "grunge"},
-    {"title": "Creep", "artist": "Radiohead", "year": 1992, "genre": "alternative rock"},
-    {"title": "Zombie", "artist": "The Cranberries", "year": 1994, "genre": "alternative rock"},
-    {"title": "Wonderwall", "artist": "Oasis", "year": 1995, "genre": "Britpop"},
-    {"title": "Everlong", "artist": "Foo Fighters", "year": 1997, "genre": "alternative rock"},
-    {"title": "Song 2", "artist": "Blur", "year": 1997, "genre": "alternative rock"},
-    {"title": "Californication", "artist": "Red Hot Chili Peppers", "year": 1999, "genre": "alternative rock"},
-    {"title": "In the End", "artist": "Linkin Park", "year": 2000, "genre": "nu metal"},
-    {"title": "Seven Nation Army", "artist": "The White Stripes", "year": 2003, "genre": "garage rock"},
-    {"title": "Mr. Brightside", "artist": "The Killers", "year": 2003, "genre": "alternative rock"},
-    {"title": "Take Me Out", "artist": "Franz Ferdinand", "year": 2004, "genre": "indie rock"},
-    {"title": "Use Somebody", "artist": "Kings of Leon", "year": 2008, "genre": "alternative rock"},
-    {"title": "Do I Wanna Know?", "artist": "Arctic Monkeys", "year": 2013, "genre": "indie rock"},
-    {"title": "Uprising", "artist": "Muse", "year": 2009, "genre": "alternative rock"},
-    {"title": "The Pretender", "artist": "Foo Fighters", "year": 2007, "genre": "alternative rock"},
-    {"title": "Radioactive", "artist": "Imagine Dragons", "year": 2012, "genre": "alternative rock"},
-    {"title": "Believer", "artist": "Imagine Dragons", "year": 2017, "genre": "alternative rock"},
-    {"title": "Take Me Back to Eden", "artist": "Sleep Token", "year": 2023, "genre": "alternative metal"},
-    {"title": "The Emptiness Machine", "artist": "Linkin Park", "year": 2024, "genre": "alternative rock"}
+  {
+    "title": "Rock Around the Clock",
+    "artist": "Bill Haley & His Comets",
+    "year": 1954,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "Tutti Frutti",
+    "artist": "Little Richard",
+    "year": 1955,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "Blue Suede Shoes",
+    "artist": "Carl Perkins",
+    "year": 1955,
+    "genre": "rockabilly"
+  },
+  {
+    "title": "Hound Dog",
+    "artist": "Elvis Presley",
+    "year": 1956,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "Great Balls of Fire",
+    "artist": "Jerry Lee Lewis",
+    "year": 1957,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "That'll Be the Day",
+    "artist": "Buddy Holly & The Crickets",
+    "year": 1957,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "Johnny B. Goode",
+    "artist": "Chuck Berry",
+    "year": 1958,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "Summertime Blues",
+    "artist": "Eddie Cochran",
+    "year": 1958,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "You Really Got Me",
+    "artist": "The Kinks",
+    "year": 1964,
+    "genre": "rock"
+  },
+  {
+    "title": "House of the Rising Sun",
+    "artist": "The Animals",
+    "year": 1964,
+    "genre": "rock"
+  },
+  {
+    "title": "I Can't Get No Satisfaction",
+    "artist": "The Rolling Stones",
+    "year": 1965,
+    "genre": "rock"
+  },
+  {
+    "title": "Paint It Black",
+    "artist": "The Rolling Stones",
+    "year": 1966,
+    "genre": "rock"
+  },
+  {
+    "title": "Sunshine of Your Love",
+    "artist": "Cream",
+    "year": 1967,
+    "genre": "psychedelic rock"
+  },
+  {
+    "title": "Purple Haze",
+    "artist": "The Jimi Hendrix Experience",
+    "year": 1967,
+    "genre": "psychedelic rock"
+  },
+  {
+    "title": "Born to Be Wild",
+    "artist": "Steppenwolf",
+    "year": 1968,
+    "genre": "hard rock"
+  },
+  {
+    "title": "White Room",
+    "artist": "Cream",
+    "year": 1968,
+    "genre": "psychedelic rock"
+  },
+  {
+    "title": "All Along the Watchtower",
+    "artist": "Jimi Hendrix",
+    "year": 1968,
+    "genre": "psychedelic rock"
+  },
+  {
+    "title": "Whole Lotta Love",
+    "artist": "Led Zeppelin",
+    "year": 1969,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Fortunate Son",
+    "artist": "Creedence Clearwater Revival",
+    "year": 1969,
+    "genre": "rock"
+  },
+  {
+    "title": "Paranoid",
+    "artist": "Black Sabbath",
+    "year": 1970,
+    "genre": "heavy metal"
+  },
+  {
+    "title": "Layla",
+    "artist": "Derek and the Dominos",
+    "year": 1970,
+    "genre": "rock"
+  },
+  {
+    "title": "Iron Man",
+    "artist": "Black Sabbath",
+    "year": 1970,
+    "genre": "heavy metal"
+  },
+  {
+    "title": "Stairway to Heaven",
+    "artist": "Led Zeppelin",
+    "year": 1971,
+    "genre": "rock"
+  },
+  {
+    "title": "Smoke on the Water",
+    "artist": "Deep Purple",
+    "year": 1972,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Dream On",
+    "artist": "Aerosmith",
+    "year": 1973,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Long Train Runnin'",
+    "artist": "The Doobie Brothers",
+    "year": 1973,
+    "genre": "rock"
+  },
+  {
+    "title": "Free Bird",
+    "artist": "Lynyrd Skynyrd",
+    "year": 1973,
+    "genre": "southern rock"
+  },
+  {
+    "title": "Sweet Home Alabama",
+    "artist": "Lynyrd Skynyrd",
+    "year": 1974,
+    "genre": "southern rock"
+  },
+  {
+    "title": "Bohemian Rhapsody",
+    "artist": "Queen",
+    "year": 1975,
+    "genre": "rock"
+  },
+  {
+    "title": "Rock and Roll All Nite",
+    "artist": "Kiss",
+    "year": 1975,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Hotel California",
+    "artist": "Eagles",
+    "year": 1976,
+    "genre": "rock"
+  },
+  {
+    "title": "More Than a Feeling",
+    "artist": "Boston",
+    "year": 1976,
+    "genre": "rock"
+  },
+  {
+    "title": "Go Your Own Way",
+    "artist": "Fleetwood Mac",
+    "year": 1977,
+    "genre": "rock"
+  },
+  {
+    "title": "We Will Rock You",
+    "artist": "Queen",
+    "year": 1977,
+    "genre": "arena rock"
+  },
+  {
+    "title": "Barracuda",
+    "artist": "Heart",
+    "year": 1977,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Sultans of Swing",
+    "artist": "Dire Straits",
+    "year": 1978,
+    "genre": "rock"
+  },
+  {
+    "title": "Highway to Hell",
+    "artist": "AC/DC",
+    "year": 1979,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Comfortably Numb",
+    "artist": "Pink Floyd",
+    "year": 1979,
+    "genre": "progressive rock"
+  },
+  {
+    "title": "Another One Bites the Dust",
+    "artist": "Queen",
+    "year": 1980,
+    "genre": "rock"
+  },
+  {
+    "title": "Back in Black",
+    "artist": "AC/DC",
+    "year": 1980,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Don't Stop Believin'",
+    "artist": "Journey",
+    "year": 1981,
+    "genre": "arena rock"
+  },
+  {
+    "title": "Tom Sawyer",
+    "artist": "Rush",
+    "year": 1981,
+    "genre": "progressive rock"
+  },
+  {
+    "title": "Every Breath You Take",
+    "artist": "The Police",
+    "year": 1983,
+    "genre": "rock"
+  },
+  {
+    "title": "Sunday Bloody Sunday",
+    "artist": "U2",
+    "year": 1983,
+    "genre": "rock"
+  },
+  {
+    "title": "Owner of a Lonely Heart",
+    "artist": "Yes",
+    "year": 1983,
+    "genre": "rock"
+  },
+  {
+    "title": "Jump",
+    "artist": "Van Halen",
+    "year": 1984,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Money for Nothing",
+    "artist": "Dire Straits",
+    "year": 1985,
+    "genre": "rock"
+  },
+  {
+    "title": "The Final Countdown",
+    "artist": "Europe",
+    "year": 1986,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Livin' on a Prayer",
+    "artist": "Bon Jovi",
+    "year": 1986,
+    "genre": "rock"
+  },
+  {
+    "title": "Sweet Child o' Mine",
+    "artist": "Guns N' Roses",
+    "year": 1987,
+    "genre": "hard rock"
+  },
+  {
+    "title": "With or Without You",
+    "artist": "U2",
+    "year": 1987,
+    "genre": "rock"
+  },
+  {
+    "title": "Pour Some Sugar on Me",
+    "artist": "Def Leppard",
+    "year": 1987,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Paradise City",
+    "artist": "Guns N' Roses",
+    "year": 1988,
+    "genre": "hard rock"
+  },
+  {
+    "title": "Smells Like Teen Spirit",
+    "artist": "Nirvana",
+    "year": 1991,
+    "genre": "grunge"
+  },
+  {
+    "title": "Under the Bridge",
+    "artist": "Red Hot Chili Peppers",
+    "year": 1991,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Alive",
+    "artist": "Pearl Jam",
+    "year": 1991,
+    "genre": "grunge"
+  },
+  {
+    "title": "Enter Sandman",
+    "artist": "Metallica",
+    "year": 1991,
+    "genre": "heavy metal"
+  },
+  {
+    "title": "Creep",
+    "artist": "Radiohead",
+    "year": 1992,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Zombie",
+    "artist": "The Cranberries",
+    "year": 1994,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Live Forever",
+    "artist": "Oasis",
+    "year": 1994,
+    "genre": "Britpop"
+  },
+  {
+    "title": "Black Hole Sun",
+    "artist": "Soundgarden",
+    "year": 1994,
+    "genre": "grunge"
+  },
+  {
+    "title": "Interstate Love Song",
+    "artist": "Stone Temple Pilots",
+    "year": 1994,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Basket Case",
+    "artist": "Green Day",
+    "year": 1994,
+    "genre": "punk rock"
+  },
+  {
+    "title": "Wonderwall",
+    "artist": "Oasis",
+    "year": 1995,
+    "genre": "Britpop"
+  },
+  {
+    "title": "1979",
+    "artist": "The Smashing Pumpkins",
+    "year": 1995,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Everlong",
+    "artist": "Foo Fighters",
+    "year": 1997,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Song 2",
+    "artist": "Blur",
+    "year": 1997,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Bittersweet Symphony",
+    "artist": "The Verve",
+    "year": 1997,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Californication",
+    "artist": "Red Hot Chili Peppers",
+    "year": 1999,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "In the End",
+    "artist": "Linkin Park",
+    "year": 2000,
+    "genre": "nu metal"
+  },
+  {
+    "title": "Last Resort",
+    "artist": "Papa Roach",
+    "year": 2000,
+    "genre": "nu metal"
+  },
+  {
+    "title": "Chop Suey!",
+    "artist": "System of a Down",
+    "year": 2001,
+    "genre": "alternative metal"
+  },
+  {
+    "title": "Seven Nation Army",
+    "artist": "The White Stripes",
+    "year": 2003,
+    "genre": "garage rock"
+  },
+  {
+    "title": "Mr. Brightside",
+    "artist": "The Killers",
+    "year": 2003,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Are You Gonna Be My Girl",
+    "artist": "Jet",
+    "year": 2003,
+    "genre": "garage rock"
+  },
+  {
+    "title": "Numb",
+    "artist": "Linkin Park",
+    "year": 2003,
+    "genre": "nu metal"
+  },
+  {
+    "title": "Take Me Out",
+    "artist": "Franz Ferdinand",
+    "year": 2004,
+    "genre": "indie rock"
+  },
+  {
+    "title": "Somebody Told Me",
+    "artist": "The Killers",
+    "year": 2004,
+    "genre": "rock"
+  },
+  {
+    "title": "Float On",
+    "artist": "Modest Mouse",
+    "year": 2004,
+    "genre": "indie rock"
+  },
+  {
+    "title": "Feel Good Inc.",
+    "artist": "Gorillaz",
+    "year": 2005,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "The Pretender",
+    "artist": "Foo Fighters",
+    "year": 2007,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Use Somebody",
+    "artist": "Kings of Leon",
+    "year": 2008,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Uprising",
+    "artist": "Muse",
+    "year": 2009,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Radioactive",
+    "artist": "Imagine Dragons",
+    "year": 2012,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Ho Hey",
+    "artist": "The Lumineers",
+    "year": 2012,
+    "genre": "folk rock"
+  },
+  {
+    "title": "Do I Wanna Know?",
+    "artist": "Arctic Monkeys",
+    "year": 2013,
+    "genre": "indie rock"
+  },
+  {
+    "title": "Riptide",
+    "artist": "Vance Joy",
+    "year": 2013,
+    "genre": "indie folk rock"
+  },
+  {
+    "title": "Best Day of My Life",
+    "artist": "American Authors",
+    "year": 2013,
+    "genre": "indie rock"
+  },
+  {
+    "title": "Ain't It Fun",
+    "artist": "Paramore",
+    "year": 2013,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Shut Up and Dance",
+    "artist": "Walk the Moon",
+    "year": 2014,
+    "genre": "indie rock"
+  },
+  {
+    "title": "Centuries",
+    "artist": "Fall Out Boy",
+    "year": 2014,
+    "genre": "pop rock"
+  },
+  {
+    "title": "The Sound of Silence",
+    "artist": "Disturbed",
+    "year": 2015,
+    "genre": "alternative metal"
+  },
+  {
+    "title": "Believer",
+    "artist": "Imagine Dragons",
+    "year": 2017,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Feel It Still",
+    "artist": "Portugal. The Man",
+    "year": 2017,
+    "genre": "rock"
+  },
+  {
+    "title": "High Hopes",
+    "artist": "Panic! At The Disco",
+    "year": 2018,
+    "genre": "pop rock"
+  },
+  {
+    "title": "Bones",
+    "artist": "Imagine Dragons",
+    "year": 2022,
+    "genre": "alternative rock"
+  },
+  {
+    "title": "Take Me Back to Eden",
+    "artist": "Sleep Token",
+    "year": 2023,
+    "genre": "alternative metal"
+  },
+  {
+    "title": "The Emptiness Machine",
+    "artist": "Linkin Park",
+    "year": 2024,
+    "genre": "alternative rock"
+  }
 ]

@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from server.config import PLAYER_DISCONNECT_GRACE_SECONDS, ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH
+from server.config import CAPPED_WIN_TIMELINE_LENGTH, PLAYER_DISCONNECT_GRACE_SECONDS, ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH, WIN_TIMELINE_LENGTH
 from server.models.card import Card
 from server.models.enums import RoomLifecycle
-from server.rooms.errors import InvalidReconnectTokenError, RoomNotFoundError, RoomNotJoinableError
+from server.rooms.errors import InvalidReconnectTokenError, InvalidThemeError, RoomNotFoundError, RoomNotJoinableError
 from server.rooms.room_manager import RoomManager
 
 NOW = datetime(2026, 1, 1, 12, 0, 0)
@@ -55,6 +55,31 @@ def test_created_room_can_actually_start_game():
 
     assert room.lifecycle == RoomLifecycle.IN_PROGRESS
     assert len(host.timeline) == 1  # dealt a starting card
+
+
+def test_create_room_defaults_to_general_theme_and_win_length():
+    manager = RoomManager()
+    room, _, _ = manager.create_room("Alice")
+
+    assert room.theme == "general"
+    assert room.win_timeline_length == WIN_TIMELINE_LENGTH
+
+
+@pytest.mark.parametrize("theme", ["rock", "pop"])
+def test_create_room_with_themed_playlist_caps_win_length(theme):
+    manager = RoomManager()
+    room, _, _ = manager.create_room("Alice", theme=theme)
+
+    assert room.theme == theme
+    assert room.win_timeline_length == CAPPED_WIN_TIMELINE_LENGTH
+    assert len(room.deck) > 0
+    assert all(isinstance(c, Card) for c in room.deck)
+
+
+def test_create_room_with_unknown_theme_raises():
+    manager = RoomManager()
+    with pytest.raises(InvalidThemeError):
+        manager.create_room("Alice", theme="jazz")
 
 
 def test_join_room_adds_player():

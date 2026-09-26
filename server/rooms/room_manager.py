@@ -23,12 +23,23 @@ import random
 import secrets
 from datetime import datetime, timedelta
 
-from server.config import PLAYER_DISCONNECT_GRACE_SECONDS, ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH
-from server.deck.loader import load_theme
+from server.config import (
+    CAPPED_WIN_TIMELINE_LENGTH,
+    PLAYER_DISCONNECT_GRACE_SECONDS,
+    ROOM_CODE_ALPHABET,
+    ROOM_CODE_LENGTH,
+    WIN_TIMELINE_LENGTH,
+)
+from server.deck.loader import available_themes, load_theme
 from server.models.enums import RoomLifecycle
 from server.models.player import Player
-from server.rooms.errors import InvalidReconnectTokenError, RoomNotFoundError, RoomNotJoinableError
+from server.rooms.errors import InvalidReconnectTokenError, InvalidThemeError, RoomNotFoundError, RoomNotJoinableError
 from server.rooms.timeline_room import TimelineRoom
+
+# Only the "general" theme uses the full WIN_TIMELINE_LENGTH — every other
+# (smaller, themed) deck caps at CAPPED_WIN_TIMELINE_LENGTH instead. See
+# TimelineRoom.win_timeline_length.
+_GENERAL_THEME = "general"
 
 
 def _generate_reconnect_token() -> str:
@@ -56,8 +67,20 @@ class RoomManager:
     def create_room(self, host_name: str, theme: str | None = None) -> tuple[TimelineRoom, Player, str]:
         """Create a new room with `host_name` as its first player (the host).
 
+        `theme` picks the deck/playlist ("general", "rock", "pop", ...) —
+        None defaults to "general". Raises InvalidThemeError for anything
+        else. Non-general themes are smaller decks, so their game caps at
+        CAPPED_WIN_TIMELINE_LENGTH cards instead of general's
+        WIN_TIMELINE_LENGTH (per CLAUDE.md's win condition, scaled to the
+        deck size) — see TimelineRoom.win_timeline_length.
+
         Returns (room, host_player, host_reconnect_token).
         """
+        resolved_theme = theme or _GENERAL_THEME
+        themes = available_themes()
+        if resolved_theme not in themes:
+            raise InvalidThemeError(f"unknown deck theme {resolved_theme!r} — available themes: {themes}")
+
         code = self._generate_unique_room_code()
         token = _generate_reconnect_token()
         host = Player(
@@ -66,9 +89,17 @@ class RoomManager:
             is_host=True,
             reconnect_token=token,
         )
-        deck = load_theme(theme or "general")
+        deck = load_theme(resolved_theme)
         random.shuffle(deck)
-        room = TimelineRoom(room_id=code, theme=theme, host_id=host.player_id, players=[host], deck=deck)
+        win_timeline_length = WIN_TIMELINE_LENGTH if resolved_theme == _GENERAL_THEME else CAPPED_WIN_TIMELINE_LENGTH
+        room = TimelineRoom(
+            room_id=code,
+            theme=resolved_theme,
+            host_id=host.player_id,
+            players=[host],
+            deck=deck,
+            win_timeline_length=win_timeline_length,
+        )
         self.rooms[code] = room
         self._tokens[token] = (code, host.player_id)
         return room, host, token

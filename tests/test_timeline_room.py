@@ -64,6 +64,7 @@ def make_in_progress_room(
     round_type=RoundType.NORMAL,
     turns_per_player=5,
     rng=None,
+    win_timeline_length=WIN_TIMELINE_LENGTH,
 ) -> TimelineRoom:
     """A room already mid-game (IN_PROGRESS, AWAITING_PLACEMENT, a turn
     already drawn) — bypasses start_game/dealing so a test can set up a
@@ -82,6 +83,7 @@ def make_in_progress_room(
         current_cards=current_cards,
         round_type=round_type,
         turn_deadline=NOW + timedelta(seconds=TURN_SECONDS),
+        win_timeline_length=win_timeline_length,
     )
     room.turns_taken[player_id] = 1
     return room
@@ -760,6 +762,27 @@ def test_no_win_below_win_length_game_continues():
     assert room.lifecycle == RoomLifecycle.IN_PROGRESS
     assert room.game_winner_id is None
     assert room.current_player_id == "p2"
+
+
+def test_custom_win_timeline_length_ends_game_early():
+    """A themed room (win_timeline_length=5, e.g. rock/pop) ends the game
+    at its own cap, not the general theme's WIN_TIMELINE_LENGTH."""
+    capped_length = 5
+    almost_full = [make_card(1900 + i, i) for i in range(capped_length - 1)]
+    p1 = Player(player_id="p1", name="Alice", timeline=list(almost_full))
+    p2 = Player(player_id="p2", name="Bob")
+    card = make_card(2020, 999)
+    room = make_in_progress_room(
+        [p1, p2], deck=[make_card(1980, 998)], current_cards=[card], win_timeline_length=capped_length
+    )
+
+    room.finish_turn("p1", slot_index=len(almost_full), now=NOW)
+    room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_SECONDS))
+
+    assert len(p1.timeline) == capped_length
+    assert capped_length < WIN_TIMELINE_LENGTH
+    assert room.lifecycle == RoomLifecycle.FINISHED
+    assert room.game_winner_id == "p1"
 
 
 def test_actions_rejected_once_game_is_finished():

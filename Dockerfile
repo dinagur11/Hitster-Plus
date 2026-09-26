@@ -8,5 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY server ./server
 COPY general.json ./general.json
+COPY rock.json ./rock.json
+COPY pop.json ./pop.json
 
 CMD ["python", "-m", "server.main"]

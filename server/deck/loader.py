@@ -20,16 +20,39 @@ from server.models.card import Card
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _GENERAL_DECK_PATH = _REPO_ROOT / "general.json"
+_ROCK_DECK_PATH = _REPO_ROOT / "rock.json"
+_POP_DECK_PATH = _REPO_ROOT / "pop.json"
 
-_KNOWN_THEMES = {"general": _GENERAL_DECK_PATH}
+_KNOWN_THEMES = {
+    "general": _GENERAL_DECK_PATH,
+    "rock": _ROCK_DECK_PATH,
+    "pop": _POP_DECK_PATH,
+}
+
+
+def available_themes() -> list[str]:
+    """Theme names whose backing JSON file actually exists on disk right
+    now, sorted. `_KNOWN_THEMES` is the full registry of theme->path
+    mappings this module knows how to build a deck for; a theme only
+    becomes real once its file is actually built (build_general_deck.py)
+    and present — e.g. a themed deck seed added to the repo but not yet
+    resolved via the iTunes API shouldn't be offered as playable. Checked
+    fresh on every call (not cached at import) so a file that appears or
+    disappears takes effect without a server restart — callers needing a
+    stable snapshot should call this once and reuse the result rather than
+    calling it repeatedly within one action.
+    """
+    return sorted(name for name, path in _KNOWN_THEMES.items() if path.is_file())
 
 
 def load_theme(theme: str = "general") -> list[Card]:
     """Return a fresh list[Card] for `theme`. Raises ValueError for an
-    unrecognized theme name."""
+    unrecognized theme name, or one whose file isn't actually present yet
+    (see available_themes) — never lets a missing file surface as a raw
+    FileNotFoundError."""
     path = _KNOWN_THEMES.get(theme)
-    if path is None:
-        raise ValueError(f"unknown deck theme {theme!r} — known themes: {sorted(_KNOWN_THEMES)}")
+    if path is None or not path.is_file():
+        raise ValueError(f"unknown deck theme {theme!r} — available themes: {available_themes()}")
 
     raw_entries = json.loads(path.read_text())
     return [

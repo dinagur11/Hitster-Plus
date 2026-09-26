@@ -10,6 +10,10 @@ class RoomNotJoinableError(Exception):
     """The room exists but isn't accepting new players right now."""
 
 
+class InvalidThemeError(Exception):
+    """create_room was asked for a deck theme/playlist that doesn't exist."""
+
+
 class InvalidReconnectTokenError(Exception):
     """The reconnect token doesn't match any active player.
 
