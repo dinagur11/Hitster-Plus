@@ -1,6 +1,7 @@
 """Thin entrypoint: starts the websockets.serve() loop."""
 
 import asyncio
+import os
 
 import websockets
 
@@ -8,7 +9,10 @@ from server.rooms.room_manager import RoomManager
 from server.ws_handler import WsHandler
 
 HOST = "0.0.0.0"
-PORT = 8765
+# Railway (and similar PaaS hosts) inject PORT at runtime and expect the
+# server to bind to it — falls back to the existing local dev port when
+# it's unset, so `python -m server.main` still works unchanged locally.
+PORT = int(os.environ.get("PORT", 8765))
 
 
 async def main() -> None:
