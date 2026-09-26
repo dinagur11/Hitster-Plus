@@ -35,6 +35,10 @@ interface GameScreenProps {
    * room.phase === "steal_window" and the viewer isn't the acting player —
    * StealWindow itself already disables clicks otherwise. */
   onStealAttempt?: (slotIndex: number) => void;
+  /** Sends a real skip_steal for the viewer. Only ever invoked while
+   * room.phase === "steal_window" and the viewer isn't the acting player —
+   * StealWindow itself already hides/disables the button otherwise. */
+  onSkipSteal?: () => void;
   /** The full cumulative set of slots the server has granted so far this
    * turn — hint_response is private to the requester, so this comes from
    * whatever the caller (LiveGameFlow) captured off that message, not any
@@ -155,6 +159,7 @@ export function GameScreen({
   onMashupSubmit,
   onMashupPreview,
   onStealAttempt,
+  onSkipSteal,
   hintGrayedSlots = [],
   livePreview = null,
   mashupLivePreview = null,
@@ -284,6 +289,10 @@ export function GameScreen({
     slotIndex: attempt.slot_index,
     playerName: room.players.find((p) => p.player_id === attempt.player_id)?.name ?? attempt.player_id,
   }));
+  const skippedPlayerNames = room.skipped_players.map(
+    (playerId) => room.players.find((p) => p.player_id === playerId)?.name ?? playerId,
+  );
+  const viewerHasSkipped = room.skipped_players.includes(viewingPlayerId);
 
   if (actingPlayer === undefined) return null;
 
@@ -430,6 +439,9 @@ export function GameScreen({
             stealDeadline={room.steal_deadline}
             onAttempt={(slotIndex) => onStealAttempt?.(slotIndex)}
             skipped={room.steal_window_skipped}
+            skippedPlayerNames={skippedPlayerNames}
+            viewerHasSkipped={viewerHasSkipped}
+            onSkip={onSkipSteal}
           />
         ) : (
           <section className="game-screen__timeline-area">

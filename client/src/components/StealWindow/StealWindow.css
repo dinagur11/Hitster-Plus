@@ -17,6 +17,13 @@
   gap: 1rem;
 }
 
+.steal-window__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
 .steal-window__eyebrow {
   font-family: var(--font-display);
   font-size: 1.05rem;
@@ -28,6 +35,13 @@
   margin: 0.15rem 0 0;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.steal-window__skipped-note {
+  margin: 0.35rem 0 0;
+  color: var(--text-faint);
+  font-size: 0.8rem;
+  font-style: italic;
 }
 
 .steal-window__rail {
@@ -59,6 +73,16 @@
 
 .steal-window__zone--open:hover {
   background: color-mix(in srgb, var(--color-felt) 25%, transparent);
+}
+
+/* Tentatively picked, not yet sent — Confirm is what actually attempts
+   the steal. Amber (matching NormalTimeline's own active-zone color)
+   rather than felt green, so "selected, about to spend a token" reads as
+   a distinctly more committed state than the plain hoverable "open" one. */
+.steal-window__zone--selected {
+  border-style: solid;
+  border-color: var(--color-amber);
+  background: color-mix(in srgb, var(--color-amber) 20%, transparent);
 }
 
 /* A claimed slot — the seeded original placement, or a real steal attempt
@@ -134,4 +158,48 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+
+.steal-window__actions {
+  display: flex;
+  justify-content: center;
+}
+
+.steal-window__waiting-note {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.steal-window__skip-btn {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.steal-window__skip-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.steal-window__confirm-btn {
+  background: var(--color-amber);
+  color: var(--on-paper);
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.steal-window__confirm-btn:disabled {
+  cursor: not-allowed;
+  background: var(--surface-2);
+  color: var(--text-faint);
 }

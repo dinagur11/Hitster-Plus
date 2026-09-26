@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Card } from "../../types";
 import { STEAL_WINDOW_SECONDS, STEAL_WINDOW_SKIPPED_SECONDS } from "../../wire/config";
 import { useCountdown } from "../../wire/useCountdown";
@@ -55,10 +56,12 @@ function joinNames(names: string[]): string {
  * The steal window: everyone but the acting player sees the acting
  * player's timeline with its gaps, the originally-placed slot and any
  * other already-attempted slot shown as a named badge (a circle with
- * whoever claimed it), and can click any still-open slot to attempt a
- * steal there — or click Skip to explicitly pass instead. No dragging
- * (unlike NormalTimeline) — a steal attempt is a single discrete choice,
- * not a freely-repositionable one.
+ * whoever claimed it). Clicking an open slot only *selects* it — nothing
+ * is sent until Confirm, same two-step pattern as NormalTimeline's
+ * drag-then-Finish-Turn, so a slot can be freely re-picked before
+ * committing. Skip lives up by the timer, since it's the other half of
+ * "decide what to do about this window" and doesn't need the whole rail
+ * in view to make that call.
  */
 export function StealWindow({
   actingPlayerName,
@@ -75,10 +78,36 @@ export function StealWindow({
 }: StealWindowProps) {
   const zoneCount = timeline.length + 1;
   const secondsRemaining = useCountdown(stealDeadline);
-  const eligibleToAct = !skipped && !isActingPlayer && tokensAvailable >= 1;
-  const canAttemptAtAll = eligibleToAct && !viewerHasSkipped;
-  const canSkip = eligibleToAct && !viewerHasSkipped;
+
+  // Confirm is shown (disabled if unaffordable) to any non-acting viewer
+  // so the token cost is visible even to someone who can't currently pay
+  // it — Skip stays token-gated since it's only meaningful for players who
+  // could otherwise have stolen.
+  const canShowConfirm = !skipped && !isActingPlayer;
+  const canShowSkip = canShowConfirm && tokensAvailable >= 1;
+  const canAttemptAtAll = canShowSkip && !viewerHasSkipped;
+  const canSkip = canShowSkip && !viewerHasSkipped;
+
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const nameForSlot = (zoneIndex: number) => attemptedSlots.find((a) => a.slotIndex === zoneIndex)?.playerName;
+
+  // A tentatively-selected slot can stop being valid without the viewer
+  // touching anything — someone else claims it first, or the viewer
+  // skips — so drop the selection rather than let Confirm point at a slot
+  // that's no longer theirs to take.
+  useEffect(() => {
+    if (selectedSlot !== null && (nameForSlot(selectedSlot) !== undefined || !canAttemptAtAll)) {
+      setSelectedSlot(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nameForSlot is a fresh closure each render; only the data it reads (attemptedSlots) and canAttemptAtAll should retrigger this
+  }, [attemptedSlots, canAttemptAtAll, selectedSlot]);
+
+  const canConfirm = canAttemptAtAll && selectedSlot !== null;
+
+  const handleConfirm = () => {
+    if (!canConfirm || selectedSlot === null) return;
+    onAttempt(selectedSlot);
+  };
 
   return (
     <section className="steal-window">
@@ -98,17 +127,31 @@ export function StealWindow({
             </p>
           )}
         </div>
-        <CountdownRing
-          secondsRemaining={secondsRemaining}
-          secondsTotal={skipped ? STEAL_WINDOW_SKIPPED_SECONDS : STEAL_WINDOW_SECONDS}
-          size="sm"
-        />
+        <div className="steal-window__header-actions">
+          {canShowSkip && (
+            <button
+              type="button"
+              className="steal-window__skip-btn"
+              disabled={!canSkip}
+              title={viewerHasSkipped ? "You've already skipped this window" : "Decline to steal this round — free, no token spent"}
+              onClick={() => onSkip?.()}
+            >
+              {viewerHasSkipped ? "Skipped" : "Skip"}
+            </button>
+          )}
+          <CountdownRing
+            secondsRemaining={secondsRemaining}
+            secondsTotal={skipped ? STEAL_WINDOW_SKIPPED_SECONDS : STEAL_WINDOW_SECONDS}
+            size="sm"
+          />
+        </div>
       </div>
 
       <div className="steal-window__rail">
         {Array.from({ length: zoneCount }, (_, zoneIndex) => {
           const claimedBy = nameForSlot(zoneIndex);
           const clickable = canAttemptAtAll && claimedBy === undefined;
+          const selected = selectedSlot === zoneIndex;
           return (
             <div className="steal-window__slot" key={`slot-${zoneIndex}`}>
               {claimedBy !== undefined ? (
@@ -118,7 +161,7 @@ export function StealWindow({
               ) : (
                 <button
                   type="button"
-                  className={`steal-window__zone${clickable ? " steal-window__zone--open" : ""}`}
+                  className={`steal-window__zone${clickable ? " steal-window__zone--open" : ""}${selected ? " steal-window__zone--selected" : ""}`}
                   disabled={!clickable}
                   title={
                     isActingPlayer
@@ -127,9 +170,9 @@ export function StealWindow({
                         ? "You've skipped this window"
                         : tokensAvailable < 1
                           ? "Not enough tokens"
-                          : "Attempt a steal here — costs 1 token"
+                          : "Select this slot, then Confirm to attempt a steal"
                   }
-                  onClick={() => onAttempt(zoneIndex)}
+                  onClick={() => setSelectedSlot(zoneIndex)}
                 />
               )}
               {zoneIndex < timeline.length && (
@@ -146,17 +189,27 @@ export function StealWindow({
         })}
       </div>
 
-      {onSkip && eligibleToAct && (
+      {canShowConfirm && (
         <div className="steal-window__actions">
-          <button
-            type="button"
-            className="steal-window__skip-btn"
-            disabled={!canSkip}
-            title={viewerHasSkipped ? "You've already skipped this window" : "Decline to steal this round — free, no token spent"}
-            onClick={onSkip}
-          >
-            {viewerHasSkipped ? "Skipped" : "Skip"}
-          </button>
+          {viewerHasSkipped ? (
+            <span className="steal-window__waiting-note">Waiting for the steal window to end…</span>
+          ) : (
+            <button
+              type="button"
+              className="steal-window__confirm-btn"
+              disabled={!canConfirm}
+              title={
+                tokensAvailable < 1
+                  ? "Not enough tokens"
+                  : selectedSlot === null
+                    ? "Select an open slot first"
+                    : "Attempt a steal at the selected slot"
+              }
+              onClick={handleConfirm}
+            >
+              Confirm (1 token)
+            </button>
+          )}
         </div>
       )}
     </section>

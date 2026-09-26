@@ -29,7 +29,7 @@ class TimelinePhase(str, Enum):
         AWAITING_PLACEMENT --(finish_turn)--> STEAL_WINDOW
         STEAL_WINDOW --(timer expires or all valid slots attempted)--> PENDING_REVEAL
         PENDING_REVEAL --(server evaluates everything in one pass)--> REVEAL
-        REVEAL --> ROUND_END
+        REVEAL --(reveal_deadline expires)--> ROUND_END
 
     STEAL_WINDOW always opens once "Finish Turn" is clicked — it is not
     conditional on the original placement being correct, since that isn't

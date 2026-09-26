@@ -19,6 +19,16 @@ STEAL_WINDOW_ALL_ATTEMPTED_DELAY_SECONDS = 10
 # confirm nobody's stealing before moving on.
 STEAL_WINDOW_ALL_SKIPPED_DELAY_SECONDS = 5
 
+# How long REVEAL holds before the server itself advances to the next turn
+# (or, if this reveal was the winning one, before it stops mattering) — a
+# real, server-held deadline like turn_deadline/steal_deadline, not a
+# client-side auto-continue.
+REVEAL_SECONDS = 10
+
+# First player to reach this many cards on their own timeline wins the
+# game outright — per CLAUDE.md's settled win condition.
+WIN_TIMELINE_LENGTH = 10
+
 MAX_HINT_SLOTS = 3
 HINT_TOKEN_COST_PER_SLOT = 1
 STEAL_TOKEN_COST = 1

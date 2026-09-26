@@ -165,6 +165,11 @@ export interface StateUpdateMessage {
   current_cards: RedactedWireCard[];
   turn_deadline: string | null;
   steal_deadline: string | null;
+  /** Absolute deadline for how long REVEAL holds before the server itself
+   * advances to the next turn — null outside REVEAL. Display-only; the
+   * server's own timer (not this countdown reaching zero) is what
+   * actually triggers the transition. */
+  reveal_deadline: string | null;
   /** Who has attempted (or, for the acting player's own seeded slot,
    * defaulted into) each slot so far this steal window — [] outside
    * STEAL_WINDOW. Kept in sync here rather than only in steal_window_open's
@@ -179,6 +184,9 @@ export interface StateUpdateMessage {
    * Once this covers every player who was actually eligible to steal, the
    * window shortens to a quick beat before revealing. */
   skipped_players: string[];
+  /** Set once the game has ended (lifecycle === "finished") — the player
+   * who reached the winning timeline length first. Null until then. */
+  game_winner_id: string | null;
 }
 
 /** A live, room-wide broadcast of the acting player's tentative

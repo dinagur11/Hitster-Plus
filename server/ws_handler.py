@@ -388,6 +388,8 @@ class WsHandler:
             deadline = room.turn_deadline
         elif room.phase == TimelinePhase.STEAL_WINDOW and room.steal_deadline is not None:
             deadline = room.steal_deadline
+        elif room.phase == TimelinePhase.REVEAL and room.reveal_deadline is not None:
+            deadline = room.reveal_deadline
 
         if deadline is None:
             self._room_timers.pop(room.room_id, None)
@@ -411,11 +413,19 @@ class WsHandler:
         if room is None:
             return
 
+        # Captured before check_timeout mutates the room, so this handler
+        # can tell which kind of transition just happened: the reveal
+        # message itself is only ever the *entering*-REVEAL transition
+        # (STEAL_WINDOW's timeout closing the window) — REVEAL's own
+        # deadline later expiring is the *leaving* transition (advancing to
+        # the next turn, or just ending the game), which has no new reveal
+        # of its own to send, only a fresh state_update.
+        phase_before = room.phase
         cards_before = list(room.current_cards)
         now = _now()
         transitioned = room.check_timeout(now)
         if transitioned:
-            if room.last_reveal is not None and room.current_cards != cards_before:
+            if phase_before == TimelinePhase.STEAL_WINDOW and room.last_reveal is not None:
                 await self._broadcast(room, build_reveal(room, revealed_cards=cards_before))
             await self._broadcast_state(room)
 

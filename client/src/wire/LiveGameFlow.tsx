@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ConfirmLeaveModal } from "../components/ConfirmLeaveModal/ConfirmLeaveModal";
+import { GameOverScreen } from "../components/GameOverScreen/GameOverScreen";
 import { GameScreen } from "../components/GameScreen/GameScreen";
 import { RevealOverlay } from "../components/RevealOverlay/RevealOverlay";
 import type { Card, GameRoomView } from "../types";
@@ -37,8 +38,11 @@ function toGameView(message: StateUpdateMessage): GameRoomView {
     current_cards: message.current_cards,
     turn_deadline: message.turn_deadline,
     steal_deadline: message.steal_deadline,
+    reveal_deadline: message.reveal_deadline,
     attempted_slots: message.attempted_slots,
     steal_window_skipped: message.steal_window_skipped,
+    skipped_players: message.skipped_players,
+    game_winner_id: message.game_winner_id,
   };
 }
 
@@ -91,8 +95,18 @@ export function LiveGameFlow({ send, subscribe, viewingPlayerId, onLeaveGame, in
   // subscription can share identical logic — the seed message is handled
   // exactly like any other state_update, just applied once up front.
   const applyStateUpdate = (message: StateUpdateMessage) => {
-    if (message.lifecycle !== "in_progress") return;
+    if (message.lifecycle !== "in_progress" && message.lifecycle !== "finished") return;
     setRoom(toGameView(message));
+
+    // The server clears reveal_deadline the moment REVEAL ends (either
+    // advancing to the next turn, or — if this was the winning reveal —
+    // just because there's nothing further to hold on). Hiding the
+    // overlay here, keyed off that field going null, is what makes
+    // dismissal server-timer-driven rather than a client-side countdown
+    // or button: this state_update arriving *is* the trigger.
+    if (message.reveal_deadline === null) {
+      setRevealPayload((prev) => (prev === null ? prev : null));
+    }
 
     if (message.phase === "awaiting_placement" && message.current_player_id !== null) {
       const key = turnKeyOf(message);
@@ -154,6 +168,13 @@ export function LiveGameFlow({ send, subscribe, viewingPlayerId, onLeaveGame, in
 
   const actingPlayer = room.players.find((p) => p.player_id === room.current_player_id);
 
+  // The final reveal (whichever placement pushed a timeline to the winning
+  // length) still plays out normally — only once it's dismissed does the
+  // terminal screen take over, same beat as any other round ending.
+  if (room.lifecycle === "finished" && revealPayload === null) {
+    return <GameOverScreen room={room} viewingPlayerId={viewingPlayerId} onLeaveGame={onLeaveGame} />;
+  }
+
   return (
     <>
       {error && (
@@ -175,6 +196,7 @@ export function LiveGameFlow({ send, subscribe, viewingPlayerId, onLeaveGame, in
           if (!actingPlayer) return;
           send({ type: "steal_attempt", target_player_id: actingPlayer.player_id, slot_index: slotIndex });
         }}
+        onSkipSteal={() => send({ type: "skip_steal" })}
         hintGrayedSlots={hintGrayedSlots}
         livePreview={livePreview}
         mashupLivePreview={mashupLivePreview}
@@ -187,7 +209,7 @@ export function LiveGameFlow({ send, subscribe, viewingPlayerId, onLeaveGame, in
           players={room.players}
           actingPlayerId={revealPayload.actingPlayerId}
           actingPlayerTimeline={revealPayload.actingPlayerTimeline}
-          onDismiss={() => setRevealPayload(null)}
+          revealDeadline={room.reveal_deadline}
         />
       )}
 

@@ -1,6 +1,6 @@
-// Matches server/main.py's HOST/PORT for local dev. No env-based override
-// yet — not needed until this deploys anywhere but localhost.
-export const WS_URL = "ws://localhost:8765";
+// Set via client/.env.local for local dev (see VITE_WS_URL there) —
+// env-based so this can point somewhere other than localhost once deployed.
+export const WS_URL = import.meta.env.VITE_WS_URL;
 
 // Mirror of server/config.py's timer constants. The server never sends a
 // "total seconds" figure over the wire (only absolute deadlines — see
@@ -10,4 +10,5 @@ export const WS_URL = "ws://localhost:8765";
 export const TURN_SECONDS = 75;
 export const STEAL_WINDOW_SECONDS = 40;
 export const STEAL_WINDOW_SKIPPED_SECONDS = 15;
+export const REVEAL_SECONDS = 10;
 export const MAX_HINT_SLOTS = 3;

@@ -13,10 +13,12 @@ list at room-start time); there's no separate seating/shuffle step.
 onto their timeline before selecting the first player, per CLAUDE.md's core
 loop — so a real placement never happens against an empty timeline.
 
-`turns_per_player` is a stand-in for "how long is this game" — CLAUDE.md
-doesn't specify a win condition or fixed turn count yet, so this is an
-explicit constructor parameter rather than a derived value. Revisit once a
-real game-length/win-condition rule is settled.
+`turns_per_player` bounds how long a game can run absent an earlier win —
+it exists so turn_manager.decide_round_type can guarantee each player's one
+mashup round happens before their turns run out. It is not itself the win
+condition: per CLAUDE.md, the game actually ends the moment any player's
+timeline reaches WIN_TIMELINE_LENGTH cards, checked right after each
+reveal (normal or mashup) that could have grown a timeline.
 
 Phase discipline: every state-changing method checks `lifecycle`/`phase`/
 current-player before acting and raises IllegalActionError otherwise — the
@@ -32,6 +34,7 @@ from server.config import (
     HINT_TOKEN_COST_PER_SLOT,
     MASHUP_EXACT_YEAR_BONUS_TOKENS,
     MAX_HINT_SLOTS,
+    REVEAL_SECONDS,
     STEAL_TOKEN_COST,
     STEAL_WINDOW_ALL_ATTEMPTED_DELAY_SECONDS,
     STEAL_WINDOW_ALL_SKIPPED_DELAY_SECONDS,
@@ -39,6 +42,7 @@ from server.config import (
     STEAL_WINDOW_SKIPPED_SECONDS,
     SWITCH_TRACK_TOKEN_COST,
     TURN_SECONDS,
+    WIN_TIMELINE_LENGTH,
 )
 from server.game_logic import guess_matching, hints, placement, turn_manager
 from server.game_logic.mashup import MashupCardResult, evaluate_mashup_card
@@ -74,6 +78,7 @@ class TimelineRoom(GameRoom):
     turns_taken: dict[str, int] = field(default_factory=dict)
     turn_deadline: datetime | None = None
     steal_deadline: datetime | None = None
+    reveal_deadline: datetime | None = None
     original_slot_index: int | None = None
     attempted_slots: dict[int, str] = field(default_factory=dict)
     steal_attempts: list[StealAttempt] = field(default_factory=list)
@@ -95,6 +100,11 @@ class TimelineRoom(GameRoom):
     skipped_stealers: set[str] = field(default_factory=set)
     last_reveal: TimelineRevealSummary | None = None
     rng: random.Random = field(default_factory=random.Random)
+    # Set once, the moment a player's timeline reaches WIN_TIMELINE_LENGTH —
+    # the room-level game winner, distinct from TimelineRevealSummary's own
+    # winner_player_id, which is just who won a single round's card. Stays
+    # None for the rest of the game's life until that happens.
+    game_winner_id: str | None = None
 
     # -- lifecycle -----------------------------------------------------
 
@@ -152,11 +162,30 @@ class TimelineRoom(GameRoom):
         self.hint_slots_granted = []
         self.switch_used_this_turn = False
         self.steal_deadline = None
+        self.reveal_deadline = None
         self.steal_window_skipped = False
         self.eligible_stealer_ids = frozenset()
         self.skipped_stealers = set()
         self.phase = TimelinePhase.AWAITING_PLACEMENT
         self.turn_deadline = turn_manager.compute_deadline(now, TURN_SECONDS)
+
+    def _maybe_end_game(self, candidate_player_id: str | None) -> bool:
+        """Check whether `candidate_player_id` (whoever just had a card
+        added to their timeline this reveal, if anyone) has reached
+        WIN_TIMELINE_LENGTH. If so, ends the game immediately: sets
+        lifecycle to FINISHED and records the winner. The just-finished
+        reveal still holds for its own REVEAL_SECONDS either way — see
+        _maybe_expire's REVEAL branch, which is what actually skips
+        _advance_to_next_turn once lifecycle is FINISHED. Returns True if
+        the game just ended, for any caller that cares.
+        """
+        if candidate_player_id is None:
+            return False
+        if len(self._player(candidate_player_id).timeline) < WIN_TIMELINE_LENGTH:
+            return False
+        self.lifecycle = RoomLifecycle.FINISHED
+        self.game_winner_id = candidate_player_id
+        return True
 
     def _advance_to_next_turn(self, now: datetime) -> None:
         self.phase = TimelinePhase.ROUND_END
@@ -177,21 +206,35 @@ class TimelineRoom(GameRoom):
         return self._maybe_expire(now)
 
     def _maybe_expire(self, now: datetime) -> bool:
-        if self.lifecycle != RoomLifecycle.IN_PROGRESS:
+        # REVEAL can still hold its own deadline after the game has ended
+        # (a winning reveal needs to finish playing out too), so this
+        # branch is checked even once lifecycle is FINISHED — only the
+        # other two phases require an actually-still-running game.
+        if self.lifecycle == RoomLifecycle.IN_PROGRESS:
+            if (
+                self.phase == TimelinePhase.AWAITING_PLACEMENT
+                and self.turn_deadline is not None
+                and now >= self.turn_deadline
+            ):
+                self._skip_turn(now)
+                return True
+            if (
+                self.phase == TimelinePhase.STEAL_WINDOW
+                and self.steal_deadline is not None
+                and now >= self.steal_deadline
+            ):
+                self._close_steal_window_and_reveal(now)
+                return True
+        if self.lifecycle not in (RoomLifecycle.IN_PROGRESS, RoomLifecycle.FINISHED):
             return False
         if (
-            self.phase == TimelinePhase.AWAITING_PLACEMENT
-            and self.turn_deadline is not None
-            and now >= self.turn_deadline
+            self.phase == TimelinePhase.REVEAL
+            and self.reveal_deadline is not None
+            and now >= self.reveal_deadline
         ):
-            self._skip_turn(now)
-            return True
-        if (
-            self.phase == TimelinePhase.STEAL_WINDOW
-            and self.steal_deadline is not None
-            and now >= self.steal_deadline
-        ):
-            self._close_steal_window_and_reveal(now)
+            self.reveal_deadline = None
+            if self.lifecycle == RoomLifecycle.IN_PROGRESS:
+                self._advance_to_next_turn(now)
             return True
         return False
 
@@ -415,7 +458,12 @@ class TimelineRoom(GameRoom):
         )
         self.current_cards = []
         self.phase = TimelinePhase.REVEAL
-        self._advance_to_next_turn(now)
+        self._maybe_end_game(winner_player_id)
+        # Held for REVEAL_SECONDS regardless of whether this reveal just
+        # ended the game — _maybe_expire's REVEAL branch is what actually
+        # advances to the next turn (or, if the game just ended, simply
+        # clears this deadline so the client knows the reveal is done).
+        self.reveal_deadline = turn_manager.compute_deadline(now, REVEAL_SECONDS)
 
     # -- mashup round: no steal window ------------------------------------
 
@@ -452,7 +500,9 @@ class TimelineRoom(GameRoom):
             mashup_result=result,
         )
         self.phase = TimelinePhase.REVEAL
-        self._advance_to_next_turn(now)
+        winner_player_id = player.player_id if result.correct else None
+        self._maybe_end_game(winner_player_id)
+        self.reveal_deadline = turn_manager.compute_deadline(now, REVEAL_SECONDS)
 
     # -- guards -------------------------------------------------------------
 

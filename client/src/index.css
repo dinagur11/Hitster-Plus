@@ -71,29 +71,3 @@ p {
 button {
   font-family: inherit;
 }
-
-/* Dev-only fixture switcher — not part of the actual game UI. */
-.fixture-switcher {
-  position: fixed;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 10;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.fixture-switcher__btn {
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-2);
-  color: var(--text-muted);
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.fixture-switcher__btn--active {
-  background: var(--color-felt);
-  color: var(--color-paper);
-  border-color: var(--color-felt);
-}

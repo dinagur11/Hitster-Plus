@@ -87,6 +87,11 @@ export interface GameRoomView {
   current_cards: RedactedCard[];
   turn_deadline: string | null;
   steal_deadline: string | null;
+  /** Absolute deadline for how long REVEAL holds before the server itself
+   * advances to the next turn — null outside REVEAL. Purely a display
+   * value (see wire/useCountdown.ts) — the actual transition is driven by
+   * the server's own timer, never by this countdown reaching zero. */
+  reveal_deadline: string | null;
   /** Who has attempted each slot so far — [] outside STEAL_WINDOW. */
   attempted_slots: { slot_index: number; player_id: string }[];
   /** True only when nobody but the acting player could afford to attempt a
@@ -95,4 +100,7 @@ export interface GameRoomView {
   /** Player ids who've explicitly declined to steal this window — [] outside
    * STEAL_WINDOW. */
   skipped_players: string[];
+  /** Set once the game has ended (lifecycle === "finished") — the player
+   * who reached the winning timeline length first. Null until then. */
+  game_winner_id: string | null;
 }

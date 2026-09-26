@@ -250,18 +250,6 @@
   padding: 0.4rem 0.9rem;
 }
 
-.reveal-overlay__continue-btn {
-  margin-top: 0.5rem;
-  background: var(--color-amber);
-  color: var(--on-paper);
-  border: none;
-  border-radius: 999px;
-  padding: 0.65rem 2rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 .reveal-overlay__mashup-heading {
   font-family: var(--font-display);
   font-size: 1.1rem;

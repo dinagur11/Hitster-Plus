@@ -92,6 +92,11 @@ def build_state_update(room: TimelineRoom) -> dict:
         # to broadcast a ticking number. Null when that phase isn't active.
         "turn_deadline": room.turn_deadline.isoformat() if room.turn_deadline else None,
         "steal_deadline": room.steal_deadline.isoformat() if room.steal_deadline else None,
+        # Absolute deadline for how long REVEAL holds before the server
+        # itself advances to the next turn — null outside REVEAL. Drives
+        # the reveal overlay's countdown; the overlay itself never decides
+        # on its own when to close (see TimelineRoom._maybe_expire).
+        "reveal_deadline": room.reveal_deadline.isoformat() if room.reveal_deadline else None,
         # Who has attempted (or, for the seeded slot, defaulted into) each
         # slot so far this steal window. steal_window_open only carries
         # this once, at the moment the window opens — without it here too,
@@ -107,6 +112,10 @@ def build_state_update(room: TimelineRoom) -> dict:
         # TimelineRoom.skip_steal) — once this covers every eligible
         # stealer, the window shortens to a quick beat before revealing.
         "skipped_players": sorted(room.skipped_stealers) if room.phase == TimelinePhase.STEAL_WINDOW else [],
+        # Set once the game has ended (lifecycle == "finished") — the
+        # player who reached WIN_TIMELINE_LENGTH cards first. Null for the
+        # rest of the game's life until then.
+        "game_winner_id": room.game_winner_id,
     }
 
 

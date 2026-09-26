@@ -4,11 +4,13 @@ from datetime import datetime, timedelta
 import pytest
 
 from server.config import (
+    REVEAL_SECONDS,
     STEAL_WINDOW_ALL_ATTEMPTED_DELAY_SECONDS,
     STEAL_WINDOW_ALL_SKIPPED_DELAY_SECONDS,
     STEAL_WINDOW_SECONDS,
     STEAL_WINDOW_SKIPPED_SECONDS,
     TURN_SECONDS,
+    WIN_TIMELINE_LENGTH,
 )
 from server.models.card import Card
 from server.models.enums import RoomLifecycle, RoundType, TimelinePhase
@@ -136,6 +138,10 @@ def test_clean_win_original_correct_no_steals():
 
     # No one steals; steal window times out.
     room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_SECONDS))
+    assert room.phase == TimelinePhase.REVEAL  # holds here for REVEAL_SECONDS before advancing
+
+    # REVEAL's own deadline expires -> server itself advances to the next turn.
+    room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_SECONDS + REVEAL_SECONDS))
 
     assert len(p1.timeline) == 3
     assert p1.timeline[1].release_year == 2000
@@ -230,6 +236,9 @@ def test_skip_steal_by_all_eligible_players_shortens_deadline():
 
     room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_ALL_SKIPPED_DELAY_SECONDS))
     assert room.last_reveal is not None
+    assert room.phase == TimelinePhase.REVEAL  # holds here for REVEAL_SECONDS before advancing
+
+    room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_ALL_SKIPPED_DELAY_SECONDS + REVEAL_SECONDS))
     assert room.phase == TimelinePhase.AWAITING_PLACEMENT
 
 
@@ -327,6 +336,10 @@ def test_mashup_round_keeps_card_only_if_correct_no_steal_window():
     assert len(room.discard) == 0
     # No steal window ever entered for a mashup round.
     assert room.last_reveal.round_type == RoundType.MASHUP
+    assert room.phase == TimelinePhase.REVEAL  # holds here for REVEAL_SECONDS before advancing
+    assert room.current_player_id == "p1"  # not yet advanced
+
+    room.check_timeout(NOW + timedelta(seconds=REVEAL_SECONDS))
     assert room.current_player_id == "p2"
 
 
@@ -517,13 +530,18 @@ def test_finish_turn_closes_immediately_if_seed_is_the_only_valid_slot():
 
     room.finish_turn("p1", slot_index=0, now=NOW)
 
-    # Closed and cascaded to the next turn within the same call — no
-    # incoming message or timer needed.
-    assert room.phase == TimelinePhase.AWAITING_PLACEMENT
-    assert room.current_player_id == "p2"
+    # Closed and evaluated within the same call — no incoming message
+    # needed to close the (trivial, single-slot) window — but REVEAL still
+    # holds for REVEAL_SECONDS before the server itself advances the turn.
+    assert room.phase == TimelinePhase.REVEAL
+    assert room.current_player_id == "p1"
     assert room.last_reveal is not None
     assert room.last_reveal.original_correct is True
     assert p1.timeline == [make_card(2000, 1)]
+
+    room.check_timeout(NOW + timedelta(seconds=REVEAL_SECONDS))
+    assert room.phase == TimelinePhase.AWAITING_PLACEMENT
+    assert room.current_player_id == "p2"
 
 
 # -- track switch --------------------------------------------------------------
@@ -646,3 +664,89 @@ def test_switch_track_resets_flag_on_next_turn():
 
     assert room.current_player_id == "p2"
     assert room.switch_used_this_turn is False  # reset fresh for p2's turn
+
+
+# -- win condition: first to WIN_TIMELINE_LENGTH cards -----------------------
+
+
+def test_reaching_win_length_on_original_placement_ends_game():
+    almost_full = [make_card(1900 + i, i) for i in range(WIN_TIMELINE_LENGTH - 1)]
+    p1 = Player(player_id="p1", name="Alice", timeline=list(almost_full))
+    p2 = Player(player_id="p2", name="Bob")
+    card = make_card(2020, 999, title="Winner", artist="WinnerArtist")
+    room = make_in_progress_room([p1, p2], deck=[make_card(1980, 998)], current_cards=[card])
+
+    room.finish_turn("p1", slot_index=len(almost_full), now=NOW)
+    room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_SECONDS))  # no steals; window times out
+
+    assert len(p1.timeline) == WIN_TIMELINE_LENGTH
+    assert room.lifecycle == RoomLifecycle.FINISHED
+    assert room.game_winner_id == "p1"
+    # No further turn was started: still p1's turn, phase left at REVEAL.
+    assert room.current_player_id == "p1"
+    assert room.phase == TimelinePhase.REVEAL
+
+
+def test_reaching_win_length_via_successful_steal_ends_game_for_stealer():
+    almost_full = [make_card(1900 + i, i) for i in range(WIN_TIMELINE_LENGTH - 1)]
+    p1 = Player(player_id="p1", name="Alice", timeline=[make_card(1990, 500)])
+    p2 = Player(player_id="p2", name="Bob", timeline=list(almost_full), tokens=3)
+    card = make_card(2020, 999, title="Winner", artist="WinnerArtist")
+    room = make_in_progress_room([p1, p2], deck=[make_card(1980, 998)], current_cards=[card], current_player_id="p1")
+
+    room.finish_turn("p1", slot_index=0, now=NOW)  # p1 places wrong: 2020 belongs after their 1990 card, not before
+    assert room.attempted_slots == {0: "p1"}
+
+    room.attempt_steal("p2", slot_index=1, now=NOW)  # p2 steals the correct slot on p1's timeline (after 1990)
+    room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_ALL_ATTEMPTED_DELAY_SECONDS))
+
+    assert len(p2.timeline) == WIN_TIMELINE_LENGTH
+    assert room.lifecycle == RoomLifecycle.FINISHED
+    assert room.game_winner_id == "p2"
+
+
+def test_reaching_win_length_via_mashup_ends_game():
+    almost_full = [make_card(1900 + i, i) for i in range(WIN_TIMELINE_LENGTH - 1)]
+    p1 = Player(player_id="p1", name="Alice", timeline=list(almost_full))
+    p2 = Player(player_id="p2", name="Bob")
+    card = make_card(2000, 999)
+    room = make_in_progress_room(
+        [p1, p2], deck=[], current_cards=[card], current_player_id="p1", round_type=RoundType.MASHUP
+    )
+
+    room.finish_mashup_turn("p1", guessed_year=2000, now=NOW)
+
+    assert len(p1.timeline) == WIN_TIMELINE_LENGTH
+    assert room.lifecycle == RoomLifecycle.FINISHED
+    assert room.game_winner_id == "p1"
+    assert room.current_player_id == "p1"  # no advance to p2
+
+
+def test_no_win_below_win_length_game_continues():
+    p1 = Player(player_id="p1", name="Alice", timeline=[make_card(1990, 1)])
+    p2 = Player(player_id="p2", name="Bob")
+    card = make_card(2000, 3)
+    room = make_in_progress_room([p1, p2], deck=[make_card(1980, 99)], current_cards=[card])
+
+    room.finish_turn("p1", slot_index=1, now=NOW)
+    room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_SECONDS))
+    room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_SECONDS + REVEAL_SECONDS))
+
+    assert room.lifecycle == RoomLifecycle.IN_PROGRESS
+    assert room.game_winner_id is None
+    assert room.current_player_id == "p2"
+
+
+def test_actions_rejected_once_game_is_finished():
+    almost_full = [make_card(1900 + i, i) for i in range(WIN_TIMELINE_LENGTH - 1)]
+    p1 = Player(player_id="p1", name="Alice", timeline=list(almost_full))
+    p2 = Player(player_id="p2", name="Bob")
+    card = make_card(2020, 999)
+    room = make_in_progress_room([p1, p2], deck=[make_card(1980, 998)], current_cards=[card])
+
+    room.finish_turn("p1", slot_index=len(almost_full), now=NOW)
+    room.check_timeout(NOW + timedelta(seconds=STEAL_WINDOW_SECONDS))
+    assert room.lifecycle == RoomLifecycle.FINISHED
+
+    with pytest.raises(IllegalActionError):
+        room.switch_track("p1", now=NOW)

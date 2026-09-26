@@ -1,32 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { Card, Player } from "../../types";
 import type { RevealMessage } from "../../wire/messages";
+import { REVEAL_SECONDS } from "../../wire/config";
+import { useCountdown } from "../../wire/useCountdown";
 import { CountdownRing } from "../CountdownRing/CountdownRing";
 import "./RevealOverlay.css";
-
-/** How long the overlay lingers before auto-continuing. Purely a client-
- * side UX choice — the server holds no REVEAL phase to key off (see the
- * actingPlayerId note below), so this has no real deadline to sync against;
- * everyone's copy just counts down independently and calls onDismiss. */
-const AUTO_DISMISS_SECONDS = 6;
 
 interface RevealOverlayProps {
   reveal: RevealMessage;
   players: Player[];
   /** Who was acting during the just-finished turn. Not part of the reveal
-   * message itself (the server's `state_update` alongside it has already
-   * advanced to the next player by the time reveal arrives — see
-   * TimelineRoom.finish_turn/finish_mashup_turn, both of which set
-   * phase=REVEAL and immediately call _advance_to_next_turn in the same
-   * call) — so whoever renders this overlay must capture current_player_id
-   * from the room state *before* that turn ended and pass it through here. */
+   * message itself — TimelineRoom.finish_turn/finish_mashup_turn hold
+   * REVEAL (with current_player_id still pointing at the acting player)
+   * until reveal_deadline itself expires, but the state_update alongside
+   * a live reveal can already be mid- or post-transition by the time this
+   * mounts — so whoever renders this overlay must capture
+   * current_player_id from the room state *before* that turn ended and
+   * pass it through here, rather than reading it live off room state. */
   actingPlayerId: string;
   /** The acting player's timeline as it stood *before* this round's card
    * was resolved — needed only for the NORMAL layout's mini-timeline (to
    * show where the card correctly slots in); ignored for MASHUP reveals.
    * Same pre-turn-end capture requirement as actingPlayerId. */
   actingPlayerTimeline: Card[];
-  onDismiss: () => void;
+  /** The server's own REVEAL deadline (state_update's reveal_deadline) —
+   * purely for the visible countdown. This overlay never decides on its
+   * own when to close: it unmounts because the caller clears its reveal
+   * state once a state_update arrives with reveal_deadline back to null,
+   * which only happens when the server's own timer actually fires. */
+  revealDeadline: string | null;
 }
 
 function playerName(players: Player[], playerId: string | null): string | null {
@@ -45,23 +47,24 @@ function findCorrectSlot(timeline: Card[], year: number): number {
 }
 
 /**
- * The reveal moment: a dismissable overlay (not a held server phase — see
- * the actingPlayerId note above) showing what was actually on the card,
- * whether the acting player's placement was right, who ends up owning the
- * card, every steal attempt's outcome, and any guess bonus. A separate
- * MASHUP layout shows both cards independently, since there's no shared
- * "original placement" concept there.
+ * The reveal moment: shows what was actually on the card, whether the
+ * acting player's placement was right, who ends up owning the card, every
+ * steal attempt's outcome, and any guess bonus. A separate MASHUP layout
+ * shows both cards independently, since there's no shared "original
+ * placement" concept there.
  *
  * Every viewer sees the same reveal at the same time (it's a room-wide
- * broadcast, not private) — dismissal is purely local per browser tab, no
- * server round-trip, so different players can linger on it for different
- * amounts of time without desyncing anything. It also auto-continues after
- * AUTO_DISMISS_SECONDS so nobody gets stuck waiting on someone else to
- * click through.
+ * broadcast) and it closes for everyone at the same time too — REVEAL is a
+ * real, server-held phase with its own deadline (see
+ * TimelineRoom.reveal_deadline / _maybe_expire), so there's no manual
+ * "Continue" button and no local timer here deciding when to close. This
+ * component only ever displays the countdown; the actual close happens one
+ * level up, once a state_update arrives reporting reveal_deadline back to
+ * null.
  */
-export function RevealOverlay({ reveal, players, actingPlayerId, actingPlayerTimeline, onDismiss }: RevealOverlayProps) {
+export function RevealOverlay({ reveal, players, actingPlayerId, actingPlayerTimeline, revealDeadline }: RevealOverlayProps) {
   const actingName = playerName(players, actingPlayerId) ?? actingPlayerId;
-  const [secondsLeft, setSecondsLeft] = useState(AUTO_DISMISS_SECONDS);
+  const secondsLeft = useCountdown(revealDeadline);
 
   // The overlay is fixed-position, so it doesn't itself block the page
   // behind it from scrolling — GameScreen's own content is routinely
@@ -83,22 +86,12 @@ export function RevealOverlay({ reveal, players, actingPlayerId, actingPlayerTim
     };
   }, []);
 
-  useEffect(() => {
-    if (secondsLeft <= 0) {
-      onDismiss();
-      return;
-    }
-    const timer = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- onDismiss is a fresh closure each render; only secondsLeft should retrigger this
-  }, [secondsLeft]);
-
   return (
     <div className="reveal-overlay">
       <div className={`reveal-overlay__panel${reveal.round_type === "mashup" ? " reveal-overlay__panel--wide" : ""}`}>
         <div className="reveal-overlay__header">
           <span className="reveal-overlay__eyebrow">Reveal</span>
-          <CountdownRing secondsRemaining={secondsLeft} secondsTotal={AUTO_DISMISS_SECONDS} size="sm" />
+          <CountdownRing secondsRemaining={secondsLeft} secondsTotal={REVEAL_SECONDS} size="sm" />
         </div>
 
         {reveal.round_type === "normal" ? (
@@ -112,10 +105,6 @@ export function RevealOverlay({ reveal, players, actingPlayerId, actingPlayerTim
         ) : (
           <MashupReveal reveal={reveal} actingName={actingName} />
         )}
-
-        <button type="button" className="reveal-overlay__continue-btn" onClick={onDismiss}>
-          Continue
-        </button>
       </div>
     </div>
   );

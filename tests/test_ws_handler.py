@@ -155,13 +155,22 @@ async def test_full_round_trip_join_place_finish_steal_reveal():
     handler._reschedule_room_timer(room)
     await asyncio.sleep(0.2)
 
-    assert room.phase == TimelinePhase.AWAITING_PLACEMENT  # cascaded to the next turn
+    assert room.phase == TimelinePhase.REVEAL  # holds here for REVEAL_SECONDS before advancing
     assert any(m["type"] == "reveal" for m in guest_ws.sent)
     assert any(m["type"] == "state_update" for m in guest_ws.sent)
     reveal = next(m for m in guest_ws.sent if m["type"] == "reveal")
     assert reveal["card"]["release_year"] == 2000
     assert reveal["winner_player_id"] == guest_player_id
     assert reveal["original_outcome"] == "incorrect"
+
+    # REVEAL's own deadline is real too — shrink it the same way and let
+    # the server's own timer advance to the next turn, with no client
+    # message and no client-side countdown involved.
+    room.reveal_deadline = datetime.now(UTC) + timedelta(milliseconds=50)
+    handler._reschedule_room_timer(room)
+    await asyncio.sleep(0.2)
+
+    assert room.phase == TimelinePhase.AWAITING_PLACEMENT  # cascaded to the next turn
 
     _ = guest_player_id  # sanity, used above
 
@@ -237,9 +246,16 @@ async def test_steal_window_timer_fires_without_any_message():
     assert room.phase == TimelinePhase.STEAL_WINDOW  # not yet
     await asyncio.sleep(0.2)
 
-    assert room.phase == TimelinePhase.AWAITING_PLACEMENT  # advanced with no client message
+    assert room.phase == TimelinePhase.REVEAL  # holds here for REVEAL_SECONDS before advancing
     assert room.last_reveal is not None
     assert any(m["type"] == "reveal" for m in ws.sent)
+
+    # REVEAL's own deadline fires the same way, with no client message.
+    room.reveal_deadline = datetime.now(UTC) + timedelta(milliseconds=50)
+    handler._reschedule_room_timer(room)
+    await asyncio.sleep(0.2)
+
+    assert room.phase == TimelinePhase.AWAITING_PLACEMENT  # advanced with no client message
 
 
 async def test_disconnect_marks_player_and_cleans_up_room_when_all_gone():

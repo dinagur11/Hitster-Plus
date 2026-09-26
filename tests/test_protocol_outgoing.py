@@ -58,9 +58,11 @@ def test_build_state_update_shape():
     assert msg["discard_count"] == 0
     assert msg["turn_deadline"] == NOW.isoformat()
     assert msg["steal_deadline"] is None
+    assert msg["reveal_deadline"] is None
     assert msg["attempted_slots"] == []
     assert msg["steal_window_skipped"] is False
     assert msg["skipped_players"] == []
+    assert msg["game_winner_id"] is None
     # Redacted — no title/artist/release_year/album_art_url, any of which
     # would leak the answer (cover art is often instantly recognizable).
     assert msg["current_cards"] == [
@@ -116,6 +118,19 @@ def test_build_state_update_skipped_players_during_steal_window():
     )
     msg = build_state_update(room)
     assert msg["skipped_players"] == ["p2"]
+
+
+def test_build_state_update_reveal_deadline_during_reveal():
+    room = make_room(phase=TimelinePhase.REVEAL, reveal_deadline=NOW)
+    msg = build_state_update(room)
+    assert msg["reveal_deadline"] == NOW.isoformat()
+
+
+def test_build_state_update_game_winner_id_once_finished():
+    room = make_room(lifecycle=RoomLifecycle.FINISHED, phase=TimelinePhase.REVEAL, game_winner_id="p1")
+    msg = build_state_update(room)
+    assert msg["lifecycle"] == "finished"
+    assert msg["game_winner_id"] == "p1"
 
 
 def test_build_placement_preview():
