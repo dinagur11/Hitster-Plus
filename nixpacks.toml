@@ -1,0 +1,7 @@
+providers = ["python"]
+
+[phases.install]
+cmds = ["pip install -r server/requirements.txt"]
+
+[start]
+cmd = "python -m server.main"
