@@ -1,0 +1,28 @@
+# --- Python (server/) ---
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Node / React (client/) ---
+node_modules/
+dist/
+build/
+.vite/
+
+# --- Env / secrets ---
+.env
+.env.local
+.env.*.local
+
+# --- Editor / OS noise ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+

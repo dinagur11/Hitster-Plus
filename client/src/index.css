@@ -1,0 +1,99 @@
+/* Design tokens — retro vinyl / analog radio aesthetic, per CLAUDE.md's
+   "Frontend design direction". Six named colors are the settled palette;
+   the surface-1/2/3 elevation steps and the text/border shades are derived
+   from them (color-mix) since CLAUDE.md doesn't specify a full tonal ramp —
+   an implementation detail, not a new palette. */
+
+:root {
+  --color-ink: #1b1712;
+  --color-paper: #ede3cf;
+  --color-walnut: #5c3d26;
+  --color-brass: #b08d57;
+  --color-amber: #e8a33d;
+  --color-felt: #2f4a3d;
+
+  --surface-0: var(--color-ink);
+  --surface-1: color-mix(in srgb, var(--color-ink) 88%, var(--color-walnut) 12%);
+  --surface-2: color-mix(in srgb, var(--color-ink) 78%, var(--color-walnut) 22%);
+  --surface-3: color-mix(in srgb, var(--color-ink) 66%, var(--color-walnut) 34%);
+  --surface-well: color-mix(in srgb, var(--color-ink) 55%, black 45%);
+
+  --text-primary: var(--color-paper);
+  --text-muted: color-mix(in srgb, var(--color-paper) 62%, transparent);
+  --text-faint: color-mix(in srgb, var(--color-paper) 38%, transparent);
+
+  --border-subtle: color-mix(in srgb, var(--color-walnut) 55%, var(--color-ink) 45%);
+  --border-strong: var(--color-walnut);
+
+  --on-paper: var(--color-ink);
+  --on-paper-muted: color-mix(in srgb, var(--color-ink) 65%, transparent);
+
+  --font-display: "Fraunces", "Iowan Old Style", serif;
+  --font-body: "Public Sans", -apple-system, sans-serif;
+
+  --shadow-panel: 0 20px 50px -20px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --shadow-well: inset 0 4px 16px rgba(0, 0, 0, 0.85);
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  margin: 0;
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Dev-only fixture switcher — not part of the actual game UI. */
+.fixture-switcher {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fixture-switcher__btn {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.fixture-switcher__btn--active {
+  background: var(--color-felt);
+  color: var(--color-paper);
+  border-color: var(--color-felt);
+}

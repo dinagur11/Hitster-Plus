@@ -1,0 +1,97 @@
+.players-panel {
+  width: 14rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  padding: 1rem;
+  align-self: flex-start;
+}
+
+.players-panel__heading {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.players-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.players-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.players-panel__row--active {
+  border-color: var(--color-amber);
+  background: color-mix(in srgb, var(--color-amber) 10%, transparent);
+}
+
+.players-panel__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-felt);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-felt) 30%, transparent);
+  flex-shrink: 0;
+}
+
+.players-panel__dot--offline {
+  background: var(--text-faint);
+  box-shadow: none;
+}
+
+.players-panel__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.players-panel__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.players-panel__you {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.players-panel__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.players-panel__host {
+  font-size: 0.72rem;
+  color: var(--color-brass);
+}
+
+.players-panel__cards {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.players-panel__turn-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--on-paper);
+  background: var(--color-amber);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  flex-shrink: 0;
+}

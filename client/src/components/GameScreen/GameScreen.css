@@ -1,0 +1,351 @@
+.game-screen {
+  min-height: 100%;
+  background: var(--surface-0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 1.5rem 3rem;
+}
+
+.game-screen__topbar {
+  width: 100%;
+  max-width: 88rem;
+  display: flex;
+  align-items: center;
+}
+
+.game-screen__wordmark {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--color-amber);
+}
+
+.game-screen__wordmark--link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.game-screen__wordmark--link:hover {
+  color: var(--color-brass);
+}
+
+/* Body: sidebar (you + players) + main content column. Fixed to its
+   content's natural width (sidebar 14rem + gap 3rem + main's 45.25rem),
+   not 100%/max-width — the timeline-area sibling below shares this exact
+   width so both are centered identically by .game-screen's align-items,
+   guaranteeing their edges coincide instead of approximating it. */
+.game-screen__body {
+  width: 62.25rem;
+  max-width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 3rem;
+}
+
+.game-screen__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.game-screen__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* The turn-status pill + its countdown, in the same row — the pill hugs
+   its own content instead of stretching the full row width. */
+.game-screen__turn-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.game-screen__player-strip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--surface-1);
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+}
+
+.game-screen__player-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.game-screen__player-meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.game-screen__mode-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.game-screen__mode-hint--timeline {
+  position: absolute;
+  top: 1rem;
+  left: 1.25rem;
+  margin: 0;
+}
+
+.game-screen__mode-hint--mashup {
+  margin: 0;
+  text-align: center;
+}
+
+.game-screen__stage {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  /* space-between, not flex-start: the vinyl's left edge still lines up
+     with the turn-status pill's left edge above it (both flush with the
+     main column's own left edge), and now the guess panel's right edge
+     lines up with the turn timer's right edge the same way. */
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.game-screen__vinyl-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Deliberately placed at the turntable, not the topbar — this is the
+   audio clip's own countdown, not the turn timer, and needs to read as a
+   different thing at a glance. */
+.game-screen__track-timer {
+  position: absolute;
+  bottom: 3.1rem;
+  left: -0.75rem;
+}
+
+/* Column: the boxed guess panel, then Switch Track centered beneath it
+   with real breathing room (not hugging the box). */
+.game-screen__guess-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.game-screen__switch-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--color-brass);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.game-screen__switch-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  border-color: var(--border-subtle);
+}
+
+.game-screen__switch-cost {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-brass);
+  background: var(--surface-well);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+
+.game-screen__switch-btn:disabled .game-screen__switch-cost {
+  color: var(--text-faint);
+}
+
+/* A real boxed panel with a heading, not floating inputs. */
+.game-screen__guess-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 24rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.game-screen__guess-heading {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-amber);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.game-screen__guess-input {
+  background: var(--surface-well);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.game-screen__guess-input::placeholder {
+  color: var(--text-faint);
+}
+
+.game-screen__guess-input:focus {
+  outline: none;
+  border-color: var(--color-amber);
+}
+
+/* A sibling of .game-screen__body (see the JSX comment), sharing its exact
+   62.25rem width — so this spans left-edge-to-left-edge with the players
+   panel and right-edge-to-right-edge with the guess column, both panels
+   centered identically by the parent, rather than nested inside <main>
+   where it could only ever match main's narrower content width. */
+.game-screen__timeline-area {
+  position: relative;
+  width: 62.25rem;
+  max-width: 100%;
+  background: var(--surface-1);
+  border-radius: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  padding: 1.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Mashup's own panel — stays nested in <main>, so it only ever needs to
+   fill main's own content width, not the wider sidebar-inclusive span. */
+.game-screen__mashup-panel {
+  width: 100%;
+  background: var(--surface-1);
+  border-radius: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.game-screen__normal-round {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.game-screen__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.game-screen__hint-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--color-felt);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.game-screen__hint-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  border-color: var(--border-subtle);
+}
+
+.game-screen__hint-cost {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-felt);
+  background: var(--surface-well);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+
+.game-screen__hint-remaining {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.game-screen__finish-btn {
+  background: var(--color-amber);
+  color: var(--on-paper);
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.game-screen__finish-btn:disabled {
+  cursor: not-allowed;
+  background: var(--surface-2);
+  color: var(--text-faint);
+}
+
+.game-screen__finish-note {
+  font-size: 0.85rem;
+  color: var(--color-felt);
+}
+
+.game-screen__viewer-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.game-screen__mashup-dials {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.game-screen__mashup-dial-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.game-screen__mashup-dial-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}

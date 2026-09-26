@@ -1,0 +1,113 @@
+.entry-screen {
+  min-height: 100%;
+  background: var(--surface-0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.entry-screen__card {
+  width: 24rem;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  padding: 2rem;
+}
+
+.entry-screen__title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-amber);
+}
+
+.entry-screen__title--link {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.entry-screen__title--link:hover {
+  color: var(--color-brass);
+}
+
+.entry-screen__subtitle {
+  margin-top: -1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.entry-screen__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.entry-screen__field-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.entry-screen__input {
+  background: var(--surface-well);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.entry-screen__input::placeholder {
+  color: var(--text-faint);
+}
+
+.entry-screen__input:focus {
+  outline: none;
+  border-color: var(--color-amber);
+}
+
+.entry-screen__input--code {
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.entry-screen__submit {
+  margin-top: 0.5rem;
+  background: var(--color-amber);
+  color: var(--on-paper);
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.entry-screen__submit:disabled {
+  cursor: not-allowed;
+  background: var(--surface-2);
+  color: var(--text-faint);
+}
+
+.entry-screen__switch {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.entry-screen__switch:hover {
+  color: var(--color-amber);
+}

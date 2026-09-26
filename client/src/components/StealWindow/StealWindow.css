@@ -1,0 +1,137 @@
+.steal-window {
+  width: 62.25rem;
+  max-width: 100%;
+  background: var(--surface-1);
+  border: 1px solid var(--color-felt);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.steal-window__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.steal-window__eyebrow {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-felt);
+}
+
+.steal-window__copy {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.steal-window__rail {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+
+.steal-window__slot {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.steal-window__zone {
+  width: 1.5rem;
+  height: 4.5rem;
+  border-radius: 999px;
+  border: 1px dashed var(--border-subtle);
+  background: transparent;
+  cursor: default;
+}
+
+.steal-window__zone--open {
+  border-color: var(--color-felt);
+  cursor: pointer;
+}
+
+.steal-window__zone--open:hover {
+  background: color-mix(in srgb, var(--color-felt) 25%, transparent);
+}
+
+/* A claimed slot — the seeded original placement, or a real steal attempt
+   — shown as a named badge instead of the plain open zone, matching the
+   width of .steal-window__zone so the rail's overall spacing is unaffected. */
+.steal-window__zone-badge {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: var(--surface-well);
+  border: 1px solid var(--color-brass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  overflow: hidden;
+}
+
+.steal-window__zone-badge-name {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-amber);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.steal-window__card {
+  flex-shrink: 0;
+  width: 6.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem;
+}
+
+.steal-window__card-art {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.steal-window__card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  /* Without an explicit width, this sizes to fit its own content — which
+     defeats the title's max-width:100% below (100% of a content-sized box
+     is no constraint at all, so long titles overflowed uncut instead of
+     ellipsizing). align-self:stretch pins it to .steal-window__card's own
+     6.5rem, giving that percentage something real to resolve against. */
+  align-self: stretch;
+  min-width: 0;
+}
+
+.steal-window__card-year {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-amber);
+}
+
+.steal-window__card-title {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}

@@ -1,0 +1,172 @@
+.normal-timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 0.5rem 0.25rem 1rem;
+}
+
+.normal-timeline__pending-track {
+  position: relative;
+  height: 6.25rem;
+}
+
+.normal-timeline__pending-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 999px;
+  border: 2px solid var(--color-brass);
+  background: var(--surface-3);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+  overflow: hidden;
+}
+
+.normal-timeline__pending-card--dragging {
+  cursor: grabbing;
+  transition: none;
+  border-color: var(--color-amber);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+}
+
+.normal-timeline__pending-card--locked {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+
+.normal-timeline__pending-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.normal-timeline__pending-mark {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--color-amber);
+}
+
+.normal-timeline__rail {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface-1);
+  border-radius: 1rem;
+  border: 1px solid var(--border-subtle);
+  padding: 0.75rem;
+}
+
+.normal-timeline__slot {
+  display: flex;
+  align-items: stretch;
+}
+
+.normal-timeline__zone {
+  flex: 0 0 auto;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-walnut) 30%, transparent);
+  border: 1px dashed var(--border-subtle);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.normal-timeline__zone--active {
+  background: color-mix(in srgb, var(--color-amber) 30%, transparent);
+  border: 1px solid var(--color-amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-amber) 25%, transparent);
+}
+
+/* Confirmed-incorrect (hinted) slot: must read as clearly blocked, not just
+   "a bit dimmer" — solid diagonal hatch in a muted red tint, solid border
+   instead of the default dashed one (dashed reads as "open"). */
+.normal-timeline__zone--grayed {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-ink) 88%, black 12%) 0px,
+    color-mix(in srgb, var(--color-ink) 88%, black 12%) 4px,
+    color-mix(in srgb, #b23b2e 40%, var(--color-ink) 60%) 4px,
+    color-mix(in srgb, #b23b2e 40%, var(--color-ink) 60%) 8px
+  );
+  border: 1px solid color-mix(in srgb, #b23b2e 45%, var(--border-subtle) 55%);
+  opacity: 1;
+}
+
+.normal-timeline__card {
+  flex: 0 0 auto;
+  min-width: 0; /* let children truncate instead of forcing the flex item wider */
+  background: var(--color-paper);
+  color: var(--on-paper);
+  border-radius: 0.75rem;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.normal-timeline__card-art {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.normal-timeline__card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.05rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.normal-timeline__card-year {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Safety net, not a design choice: prevents title/artist from overflowing
+   the card at small computed widths. Whether to hide them entirely below
+   some width threshold is a separate, not-yet-decided question. */
+.normal-timeline__card-title,
+.normal-timeline__card-artist {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.normal-timeline__card-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.normal-timeline__card-artist {
+  font-size: 0.65rem;
+  color: var(--on-paper-muted);
+  line-height: 1.2;
+}

@@ -1,0 +1,112 @@
+.lobby-screen {
+  min-height: 100%;
+  background: var(--surface-0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 1.5rem 3rem;
+}
+
+.lobby-screen__topbar {
+  width: 100%;
+  max-width: 62.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.lobby-screen__wordmark {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--color-amber);
+}
+
+.lobby-screen__wordmark--link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.lobby-screen__wordmark--link:hover {
+  color: var(--color-brass);
+}
+
+.lobby-screen__body {
+  width: 62.25rem;
+  max-width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 3rem;
+}
+
+.lobby-screen__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 2rem;
+}
+
+.lobby-screen__code-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  padding: 1.5rem 3rem;
+}
+
+.lobby-screen__code-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.lobby-screen__code-value {
+  font-family: var(--font-display);
+  font-size: 2.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-amber);
+}
+
+.lobby-screen__copy {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.lobby-screen__copy--muted {
+  color: var(--text-muted);
+}
+
+.lobby-screen__start-btn {
+  margin-top: 0.5rem;
+  background: var(--color-amber);
+  color: var(--on-paper);
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 2.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lobby-screen__start-btn:disabled {
+  cursor: not-allowed;
+  background: var(--surface-2);
+  color: var(--text-faint);
+}
+
+.lobby-screen__hint {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.lobby-screen__error {
+  color: var(--color-amber);
+}

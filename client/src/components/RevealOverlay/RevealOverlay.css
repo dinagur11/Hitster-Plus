@@ -1,0 +1,309 @@
+.reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--color-ink) 78%, transparent);
+}
+
+.reveal-overlay__panel {
+  width: 30rem;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface-1);
+  border: 1px solid var(--color-brass);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  box-shadow: var(--shadow-panel);
+}
+
+.reveal-overlay__panel--wide {
+  width: 34rem;
+}
+
+.reveal-overlay__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reveal-overlay__eyebrow {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-amber);
+}
+
+.reveal-overlay__card {
+  width: 12rem;
+  background: var(--color-paper);
+  color: var(--on-paper);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+.reveal-overlay__card-art {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.65rem;
+  object-fit: cover;
+}
+
+.reveal-overlay__card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.1rem;
+  width: 100%;
+}
+
+.reveal-overlay__card-year {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.reveal-overlay__card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.reveal-overlay__card-artist {
+  font-size: 0.8rem;
+  color: var(--on-paper-muted);
+}
+
+.reveal-overlay__outcome {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.reveal-overlay__outcome-mark {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.reveal-overlay__outcome--correct {
+  color: var(--color-felt);
+}
+
+.reveal-overlay__outcome--incorrect {
+  color: color-mix(in srgb, #b23b2e 70%, var(--color-paper) 30%);
+}
+
+.reveal-overlay__ownership {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.reveal-overlay__steal-list {
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.reveal-overlay__steal-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: var(--surface-well);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.reveal-overlay__steal-row--correct {
+  color: var(--text-primary);
+}
+
+.reveal-overlay__steal-row--correct .reveal-overlay__outcome-mark {
+  color: var(--color-felt);
+}
+
+.reveal-overlay__steal-row:not(.reveal-overlay__steal-row--correct) .reveal-overlay__outcome-mark {
+  color: color-mix(in srgb, #b23b2e 70%, var(--color-paper) 30%);
+}
+
+.reveal-overlay__mini-timeline-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reveal-overlay__mini-timeline-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.reveal-overlay__mini-timeline {
+  width: 100%;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem;
+  background: var(--surface-well);
+  border-radius: 0.75rem;
+}
+
+.reveal-overlay__mini-card {
+  flex: 0 0 auto;
+  width: 6rem;
+  background: var(--color-paper);
+  color: var(--on-paper);
+  border-radius: 0.65rem;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.reveal-overlay__mini-card-art {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.45rem;
+  object-fit: cover;
+}
+
+.reveal-overlay__mini-card-body {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.05rem;
+}
+
+.reveal-overlay__mini-card-year {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.reveal-overlay__mini-card-title,
+.reveal-overlay__mini-card-artist {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.reveal-overlay__mini-card-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.reveal-overlay__mini-card-artist {
+  font-size: 0.6rem;
+  color: var(--on-paper-muted);
+}
+
+.reveal-overlay__mini-card--highlight {
+  border-color: var(--color-amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-amber) 30%, transparent);
+}
+
+.reveal-overlay__mini-card--highlight-discarded {
+  border: 2px dashed color-mix(in srgb, #b23b2e 70%, var(--color-paper) 30%);
+  opacity: 0.7;
+}
+
+.reveal-overlay__bonus-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-felt);
+  background: color-mix(in srgb, var(--color-felt) 18%, transparent);
+  border: 1px solid var(--color-felt);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+}
+
+.reveal-overlay__continue-btn {
+  margin-top: 0.5rem;
+  background: var(--color-amber);
+  color: var(--on-paper);
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reveal-overlay__mashup-heading {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.reveal-overlay__mashup-cards {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.reveal-overlay__mashup-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reveal-overlay__mashup-guess {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.reveal-overlay__mashup-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+}
+
+.reveal-overlay__mashup-tag--kept {
+  color: var(--color-felt);
+  background: color-mix(in srgb, var(--color-felt) 18%, transparent);
+  border: 1px solid var(--color-felt);
+}
+
+.reveal-overlay__mashup-tag--discarded {
+  color: var(--text-faint);
+  background: var(--surface-well);
+  border: 1px solid var(--border-subtle);
+}

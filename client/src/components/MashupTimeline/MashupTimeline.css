@@ -1,0 +1,122 @@
+.mashup-timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mashup-timeline__label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.mashup-timeline__dial {
+  position: relative;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 50%;
+  background: var(--surface-well);
+  box-shadow: var(--shadow-well);
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mashup-timeline__dial--dragging {
+  cursor: grabbing;
+}
+
+.mashup-timeline__dial--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mashup-timeline__track {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mashup-timeline__track-path {
+  fill: none;
+  stroke: var(--surface-3);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.mashup-timeline__track-fill {
+  fill: none;
+  stroke: var(--color-amber);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.mashup-timeline__needle {
+  position: absolute;
+  /* Anchored so its bottom edge sits exactly at the dial's center, pointing
+     straight up by default (angle 0) — rotate() then sweeps it clockwise
+     to match describeArc's same 0deg-is-up convention. */
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 6.5rem;
+  margin-left: -1px;
+  margin-top: -6.5rem;
+  transform-origin: bottom center;
+  pointer-events: none;
+}
+
+.mashup-timeline__needle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 3px;
+  height: 100%;
+  background: var(--color-brass);
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+
+.mashup-timeline__needle-tip {
+  position: absolute;
+  top: -0.35rem;
+  left: 50%;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--color-amber);
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-amber) 70%, transparent);
+}
+
+.mashup-timeline__readout {
+  position: relative;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  background: var(--color-paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.mashup-timeline__year {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--on-paper);
+  font-variant-numeric: tabular-nums;
+}
+
+.mashup-timeline__bounds {
+  display: flex;
+  justify-content: space-between;
+  width: 14rem;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
