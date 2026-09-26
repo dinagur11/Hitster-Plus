@@ -112,11 +112,11 @@ function readStoredVolume(): number {
  * client (not just the acting player) hears the same clip, since guessing
  * is a shared listening moment, not a private one; only the visuals
  * (title/artist/year/art) stay hidden per player, never the audio itself.
- * Loops for as long as `playing` stays true, so a 75s turn never goes
- * silent even though Deezer/iTunes previews are ~30s — but `playing` turns
- * false the moment the server moves the room out of AWAITING_PLACEMENT
- * (steal window, reveal, or the next player's turn), so the loop always
- * stops there rather than carrying on forever.
+ * Plays the ~30s clip through exactly once and then stops on its own —
+ * deliberately not looped, even though a turn's timer runs longer than the
+ * clip: once you've heard it, it's quiet again, same as the physical game.
+ * `playing` turning false (steal window, reveal, next player's turn, a
+ * switch_track discard) also pauses it immediately, same as before.
  *
  * `volume` is per-viewer only (see readStoredVolume) — turning it down or
  * muting it only affects what this browser hears, never other players'.
@@ -151,7 +151,7 @@ function TrackAudio({
 
     audio.src = previewUrl;
     audio.currentTime = 0;
-    audio.loop = true;
+    audio.loop = false;
     audio.volume = volume;
     audio.play().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps -- cardId (not just previewUrl) forces a restart on switch_track even if a URL were ever reused; volume is applied in its own effect below so it doesn't restart playback
@@ -171,10 +171,31 @@ function TrackAudio({
  * readStoredVolume) so it survives a refresh/reconnect but never leaves
  * this browser.
  */
-function VolumeControl({ volume, onChange }: { volume: number; onChange: (volume: number) => void }) {
+function VolumeControl({
+  volume,
+  onChange,
+  vertical = false,
+}: {
+  volume: number;
+  onChange: (volume: number) => void;
+  /** Stacks the slider above/below the mute button instead of beside it,
+   * and orients the slider itself top-to-bottom — for spots like the
+   * mashup dial where there's no spare horizontal room in the timer row. */
+  vertical?: boolean;
+}) {
   const isMuted = volume === 0;
   return (
-    <div className="game-screen__volume">
+    <div className={`game-screen__volume${vertical ? " game-screen__volume--vertical" : ""}`}>
+      <input
+        type="range"
+        className="game-screen__volume-slider"
+        min={0}
+        max={100}
+        value={Math.round(volume * 100)}
+        onChange={(event) => onChange(Number(event.target.value) / 100)}
+        aria-label="Your volume"
+        aria-orientation={vertical ? "vertical" : "horizontal"}
+      />
       <button
         type="button"
         className="game-screen__volume-mute"
@@ -184,15 +205,6 @@ function VolumeControl({ volume, onChange }: { volume: number; onChange: (volume
       >
         {isMuted ? "🔇" : "🔊"}
       </button>
-      <input
-        type="range"
-        className="game-screen__volume-slider"
-        min={0}
-        max={100}
-        value={Math.round(volume * 100)}
-        onChange={(event) => onChange(Number(event.target.value) / 100)}
-        aria-label="Your volume"
-      />
     </div>
   );
 }
@@ -474,7 +486,6 @@ export function GameScreen({
                 <div className="game-screen__mashup-dial-slot">
                   <div className="game-screen__mashup-dial-header">
                     <ClipCountdown cardId={room.current_cards[0]?.deezer_id ?? null} totalSeconds={MASHUP_CLIP_SECONDS} size="sm" />
-                    <VolumeControl volume={volume} onChange={handleVolumeChange} />
                   </div>
                   <MashupTimeline
                     minYear={MASHUP_MIN_YEAR}
@@ -484,6 +495,9 @@ export function GameScreen({
                     onChange={handleMashupChange}
                     onCommit={handleMashupCommit}
                   />
+                </div>
+                <div className="game-screen__mashup-volume">
+                  <VolumeControl volume={volume} onChange={handleVolumeChange} vertical />
                 </div>
               </div>
               {isActingPlayer ? (

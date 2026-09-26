@@ -1,4 +1,11 @@
 .reveal-overlay {
+  /* Brass/felt green reads well as a small border/badge accent, but as
+     body text on the dark ink surface it's too close to the background in
+     both hue and lightness to read as "success" at a glance — this bumps
+     saturation and lightness for reveal-overlay text specifically, while
+     leaving --color-felt itself (borders, badge fills elsewhere) alone. */
+  --reveal-green: #3fbf72;
+
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -102,7 +109,7 @@
 }
 
 .reveal-overlay__outcome--correct {
-  color: var(--color-felt);
+  color: var(--reveal-green);
 }
 
 .reveal-overlay__outcome--incorrect {
@@ -141,7 +148,7 @@
 }
 
 .reveal-overlay__steal-row--correct .reveal-overlay__outcome-mark {
-  color: var(--color-felt);
+  color: var(--reveal-green);
 }
 
 .reveal-overlay__steal-row:not(.reveal-overlay__steal-row--correct) .reveal-overlay__outcome-mark {
@@ -243,9 +250,9 @@
 .reveal-overlay__bonus-badge {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-felt);
-  background: color-mix(in srgb, var(--color-felt) 18%, transparent);
-  border: 1px solid var(--color-felt);
+  color: var(--reveal-green);
+  background: color-mix(in srgb, var(--reveal-green) 18%, transparent);
+  border: 1px solid var(--reveal-green);
   border-radius: 999px;
   padding: 0.4rem 0.9rem;
 }
@@ -285,9 +292,9 @@
 }
 
 .reveal-overlay__mashup-tag--kept {
-  color: var(--color-felt);
-  background: color-mix(in srgb, var(--color-felt) 18%, transparent);
-  border: 1px solid var(--color-felt);
+  color: var(--reveal-green);
+  background: color-mix(in srgb, var(--reveal-green) 18%, transparent);
+  border: 1px solid var(--reveal-green);
 }
 
 .reveal-overlay__mashup-tag--discarded {
