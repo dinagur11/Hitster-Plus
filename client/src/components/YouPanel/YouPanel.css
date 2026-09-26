@@ -52,3 +52,47 @@
   font-size: 0.7rem;
   color: var(--text-muted);
 }
+
+.you-panel__stat--tokens {
+  position: relative;
+  overflow: visible;
+}
+
+.you-panel__token-delta {
+  position: absolute;
+  top: -0.3rem;
+  right: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: you-panel-token-delta 1.2s ease-out forwards;
+}
+
+.you-panel__token-delta--gain {
+  color: var(--color-felt);
+}
+
+.you-panel__token-delta--loss {
+  color: #a8402f;
+}
+
+@keyframes you-panel-token-delta {
+  0% {
+    opacity: 0;
+    transform: translateY(0.2rem) scale(0.9);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-0.2rem) scale(1.05);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-1rem) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-1.6rem) scale(1);
+  }
+}

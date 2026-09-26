@@ -423,11 +423,34 @@ class WsHandler:
         phase_before = room.phase
         cards_before = list(room.current_cards)
         now = _now()
-        transitioned = room.check_timeout(now)
+
+        # AWAITING_PLACEMENT expiring on a NORMAL round finishes the turn
+        # (see TimelineRoom.check_timeout's docstring) rather than just
+        # advancing — carry over whatever the player had tentatively
+        # selected via place_card, if anything, so a slot pick that never
+        # got a Finish Turn click still counts.
+        pending_slot_index = pending_guessed_artist = pending_guessed_title = None
+        acting_connection_id = None
+        if phase_before == TimelinePhase.AWAITING_PLACEMENT and room.current_player_id is not None:
+            acting_player = _find_player(room, room.current_player_id)
+            acting_connection_id = acting_player.connection_id if acting_player else None
+            pending = self._pending_placements.get(acting_connection_id) if acting_connection_id else None
+            if pending is not None:
+                pending_slot_index = pending.slot_index
+                pending_guessed_artist = pending.guessed_artist
+                pending_guessed_title = pending.guessed_title
+
+        transitioned = room.check_timeout(now, pending_slot_index, pending_guessed_artist, pending_guessed_title)
         if transitioned:
-            if phase_before == TimelinePhase.STEAL_WINDOW and room.last_reveal is not None:
-                await self._broadcast(room, build_reveal(room, revealed_cards=cards_before))
-            await self._broadcast_state(room)
+            if acting_connection_id is not None:
+                self._pending_placements.pop(acting_connection_id, None)
+            if phase_before == TimelinePhase.AWAITING_PLACEMENT and room.phase == TimelinePhase.STEAL_WINDOW:
+                await self._broadcast_state(room)
+                await self._broadcast(room, build_steal_window_open(room))
+            else:
+                if phase_before == TimelinePhase.STEAL_WINDOW and room.last_reveal is not None:
+                    await self._broadcast(room, build_reveal(room, revealed_cards=cards_before))
+                await self._broadcast_state(room)
 
         self._reschedule_room_timer(room)
 

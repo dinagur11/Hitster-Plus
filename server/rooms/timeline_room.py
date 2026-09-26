@@ -196,16 +196,39 @@ class TimelineRoom(GameRoom):
 
     # -- timer enforcement ----------------------------------------------
 
-    def check_timeout(self, now: datetime) -> bool:
+    def check_timeout(
+        self,
+        now: datetime,
+        pending_slot_index: int | None = None,
+        pending_guessed_artist: str | None = None,
+        pending_guessed_title: str | None = None,
+    ) -> bool:
         """Force a phase transition if the current phase's deadline has passed.
 
         Returns True if a transition happened. Call this from a polling loop
         (or directly in tests) to simulate timers without real waiting —
         nothing else triggers this automatically.
-        """
-        return self._maybe_expire(now)
 
-    def _maybe_expire(self, now: datetime) -> bool:
+        `pending_slot_index` carries whatever slot the acting player had
+        tentatively selected (via place_card) but never locked in with
+        finish_turn before the turn timer ran out — ws_handler tracks that
+        tentative placement (see `_pending_placements`), since TimelineRoom
+        itself never mutates on a bare place_card. When present, the
+        expired turn is finished exactly as if the player had clicked
+        Finish Turn on that slot. When absent (nothing ever selected), the
+        turn still resolves into a real placement rather than being
+        discarded outright — the reveal and steal window happen just the
+        same, at slot 0, so other players still get a shot at the card.
+        """
+        return self._maybe_expire(now, pending_slot_index, pending_guessed_artist, pending_guessed_title)
+
+    def _maybe_expire(
+        self,
+        now: datetime,
+        pending_slot_index: int | None = None,
+        pending_guessed_artist: str | None = None,
+        pending_guessed_title: str | None = None,
+    ) -> bool:
         # REVEAL can still hold its own deadline after the game has ended
         # (a winning reveal needs to finish playing out too), so this
         # branch is checked even once lifecycle is FINISHED — only the
@@ -216,7 +239,10 @@ class TimelineRoom(GameRoom):
                 and self.turn_deadline is not None
                 and now >= self.turn_deadline
             ):
-                self._skip_turn(now)
+                if self.round_type == RoundType.NORMAL:
+                    self._auto_finish_turn(now, pending_slot_index, pending_guessed_artist, pending_guessed_title)
+                else:
+                    self._skip_turn(now)
                 return True
             if (
                 self.phase == TimelinePhase.STEAL_WINDOW
@@ -238,10 +264,34 @@ class TimelineRoom(GameRoom):
             return True
         return False
 
+    def _auto_finish_turn(
+        self,
+        now: datetime,
+        pending_slot_index: int | None,
+        pending_guessed_artist: str | None,
+        pending_guessed_title: str | None,
+    ) -> None:
+        """Turn timer expired during a NORMAL round: finish the turn on
+        whatever slot the player had tentatively selected, or — if they
+        never selected one — on slot 0 (always valid: the starting-card
+        deal guarantees every timeline has at least 1 card, so there are
+        always at least 2 valid slots). Either way this still opens the
+        steal window and runs the reveal, per CLAUDE.md's disconnection
+        handling: the 75s timer already covers listening + placement, so a
+        player who let it run out still gets a real (if undefended)
+        placement rather than having their turn silently discarded.
+        """
+        player = self._current_player()
+        slot_index = pending_slot_index
+        if slot_index is None or slot_index not in placement.valid_slot_indices(player.timeline):
+            slot_index = 0
+        self.turn_deadline = None
+        self._apply_finish_turn(player, slot_index, now, pending_guessed_artist, pending_guessed_title)
+
     def _skip_turn(self, now: datetime) -> None:
-        """Turn timer expired with nothing placed: resolve as a failed/skipped
-        turn, per CLAUDE.md's disconnection-handling note. No steal window,
-        nothing to evaluate — the card(s) are simply discarded.
+        """Turn timer expired with nothing placed, during a MASHUP round
+        (which has no discrete slots or steal window to fall back into):
+        resolve as a failed/skipped turn — the card is simply discarded.
         """
         self.discard.extend(self.current_cards)
         self.current_cards = []
@@ -333,6 +383,17 @@ class TimelineRoom(GameRoom):
         if slot_index not in placement.valid_slot_indices(player.timeline):
             raise IllegalActionError(f"slot_index {slot_index} is not valid for this timeline")
 
+        self._apply_finish_turn(player, slot_index, now, guessed_artist, guessed_title)
+
+    def _apply_finish_turn(
+        self,
+        player: Player,
+        slot_index: int,
+        now: datetime,
+        guessed_artist: str | None,
+        guessed_title: str | None,
+    ) -> None:
+        player_id = player.player_id
         self.original_slot_index = slot_index
         self.guessed_artist = guessed_artist
         self.guessed_title = guessed_title

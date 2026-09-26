@@ -399,8 +399,11 @@ def test_mashup_within_tolerance_but_not_exact_earns_no_bonus_token():
 # -- timeout-driven transitions ------------------------------------------------
 
 
-def test_turn_timeout_skips_turn_with_no_placement():
-    p1 = Player(player_id="p1", name="Alice")
+def test_turn_timeout_with_no_placement_still_opens_steal_window():
+    """No place_card at all this turn: the turn still resolves into a real
+    placement (at slot 0) and opens the steal window/reveal — it doesn't
+    just get discarded and handed to the next player."""
+    p1 = Player(player_id="p1", name="Alice", timeline=[make_card(1990, 5)])
     p2 = Player(player_id="p2", name="Bob")
     card = make_card(2000, 1)
     room = make_in_progress_room([p1, p2], deck=[make_card(1980, 99)], current_cards=[card])
@@ -408,10 +411,32 @@ def test_turn_timeout_skips_turn_with_no_placement():
     transitioned = room.check_timeout(NOW + timedelta(seconds=TURN_SECONDS))
 
     assert transitioned is True
-    assert p1.timeline == []
-    assert len(room.discard) == 1
-    assert room.current_player_id == "p2"
-    assert room.phase == TimelinePhase.AWAITING_PLACEMENT
+    assert room.phase == TimelinePhase.STEAL_WINDOW
+    assert room.original_slot_index == 0
+    assert room.current_player_id == "p1"
+    assert len(room.discard) == 0
+
+
+def test_turn_timeout_with_pending_slot_finishes_that_placement():
+    """A slot was selected (place_card) but Finish Turn was never clicked
+    before the timer ran out: the expired turn finishes on that slot."""
+    p1 = Player(player_id="p1", name="Alice", timeline=[make_card(1990, 5), make_card(2010, 6)])
+    p2 = Player(player_id="p2", name="Bob")
+    card = make_card(2000, 1)
+    room = make_in_progress_room([p1, p2], deck=[make_card(1980, 99)], current_cards=[card])
+
+    transitioned = room.check_timeout(
+        NOW + timedelta(seconds=TURN_SECONDS),
+        pending_slot_index=1,
+        pending_guessed_artist="Artist",
+        pending_guessed_title="Song",
+    )
+
+    assert transitioned is True
+    assert room.phase == TimelinePhase.STEAL_WINDOW
+    assert room.original_slot_index == 1
+    assert room.guessed_artist == "Artist"
+    assert room.guessed_title == "Song"
 
 
 def test_steal_window_timeout_closes_with_partial_attempts():

@@ -181,6 +181,27 @@
   color: var(--text-faint);
 }
 
+.game-screen__volume {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.game-screen__volume-mute {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.15rem;
+}
+
+.game-screen__volume-slider {
+  width: 6rem;
+  accent-color: var(--color-brass);
+  cursor: pointer;
+}
+
 /* A real boxed panel with a heading, not floating inputs. */
 .game-screen__guess-panel {
   display: flex;

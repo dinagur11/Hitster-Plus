@@ -90,13 +90,36 @@ function ClipCountdown({ cardId, totalSeconds, size }: { cardId: number | null; 
   return <CountdownRing secondsRemaining={secondsRemaining} secondsTotal={totalSeconds} label="Track" size={size} />;
 }
 
+const VOLUME_STORAGE_KEY = "hitster:track-volume";
+
+/** Reads the viewer's last-chosen volume for this browser only — never
+ * shared with the server or other players, since volume is a per-listener
+ * preference, not game state. Falls back to full volume when storage is
+ * unavailable (private browsing, etc.) or holds nothing yet. */
+function readStoredVolume(): number {
+  try {
+    const raw = window.localStorage.getItem(VOLUME_STORAGE_KEY);
+    if (raw === null) return 1;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? Math.min(1, Math.max(0, parsed)) : 1;
+  } catch {
+    return 1;
+  }
+}
+
 /**
  * The actual audio playback behind the vinyl's spin — every connected
  * client (not just the acting player) hears the same clip, since guessing
  * is a shared listening moment, not a private one; only the visuals
  * (title/artist/year/art) stay hidden per player, never the audio itself.
  * Loops for as long as `playing` stays true, so a 75s turn never goes
- * silent even though Deezer/iTunes previews are ~30s.
+ * silent even though Deezer/iTunes previews are ~30s — but `playing` turns
+ * false the moment the server moves the room out of AWAITING_PLACEMENT
+ * (steal window, reveal, or the next player's turn), so the loop always
+ * stops there rather than carrying on forever.
+ *
+ * `volume` is per-viewer only (see readStoredVolume) — turning it down or
+ * muting it only affects what this browser hears, never other players'.
  *
  * No fallback UI if the browser's autoplay policy blocks `audio.play()`
  * (no prior user gesture on this page) — by the time a real turn's clip
@@ -104,7 +127,17 @@ function ClipCountdown({ cardId, totalSeconds, size }: { cardId: number | null; 
  * Game, so this doesn't come up in practice; the rejection is swallowed
  * rather than surfaced.
  */
-function TrackAudio({ previewUrl, cardId, playing }: { previewUrl: string | null; cardId: number | null; playing: boolean }) {
+function TrackAudio({
+  previewUrl,
+  cardId,
+  playing,
+  volume,
+}: {
+  previewUrl: string | null;
+  cardId: number | null;
+  playing: boolean;
+  volume: number;
+}) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -119,11 +152,49 @@ function TrackAudio({ previewUrl, cardId, playing }: { previewUrl: string | null
     audio.src = previewUrl;
     audio.currentTime = 0;
     audio.loop = true;
+    audio.volume = volume;
     audio.play().catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- cardId (not just previewUrl) forces a restart on switch_track even if a URL were ever reused
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cardId (not just previewUrl) forces a restart on switch_track even if a URL were ever reused; volume is applied in its own effect below so it doesn't restart playback
   }, [previewUrl, cardId, playing]);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) audio.volume = volume;
+  }, [volume]);
+
   return <audio ref={audioRef} />;
+}
+
+/**
+ * Volume slider for this viewer's own audio only — drag down to lower it,
+ * all the way down to mute. Persisted to localStorage (see
+ * readStoredVolume) so it survives a refresh/reconnect but never leaves
+ * this browser.
+ */
+function VolumeControl({ volume, onChange }: { volume: number; onChange: (volume: number) => void }) {
+  const isMuted = volume === 0;
+  return (
+    <div className="game-screen__volume">
+      <button
+        type="button"
+        className="game-screen__volume-mute"
+        onClick={() => onChange(isMuted ? 1 : 0)}
+        aria-label={isMuted ? "Unmute" : "Mute"}
+        title={isMuted ? "Unmute" : "Mute"}
+      >
+        {isMuted ? "🔇" : "🔊"}
+      </button>
+      <input
+        type="range"
+        className="game-screen__volume-slider"
+        min={0}
+        max={100}
+        value={Math.round(volume * 100)}
+        onChange={(event) => onChange(Number(event.target.value) / 100)}
+        aria-label="Your volume"
+      />
+    </div>
+  );
 }
 
 /**
@@ -183,6 +254,16 @@ export function GameScreen({
   const [mashupGuess, setMashupGuess] = useState(() => Math.round((MASHUP_MIN_YEAR + MASHUP_MAX_YEAR) / 2));
   const [mashupTouched, setMashupTouched] = useState(false);
   const [mashupSubmitted, setMashupSubmitted] = useState(false);
+  const [volume, setVolume] = useState(readStoredVolume);
+
+  const handleVolumeChange = (next: number) => {
+    setVolume(next);
+    try {
+      window.localStorage.setItem(VOLUME_STORAGE_KEY, String(next));
+    } catch {
+      // Private browsing / storage disabled — volume just won't persist across reloads.
+    }
+  };
 
   useEffect(() => {
     setSelectedZone(null);
@@ -312,6 +393,7 @@ export function GameScreen({
         previewUrl={room.current_cards[0]?.preview_url ?? null}
         cardId={room.current_cards[0]?.deezer_id ?? null}
         playing={room.phase === "awaiting_placement"}
+        volume={volume}
       />
 
       <div className="game-screen__body">
@@ -338,6 +420,7 @@ export function GameScreen({
                 <div className="game-screen__track-timer">
                   <ClipCountdown cardId={room.current_cards[0]?.deezer_id ?? null} totalSeconds={clipSeconds} size="sm" />
                 </div>
+                <VolumeControl volume={volume} onChange={handleVolumeChange} />
               </div>
 
               <div className="game-screen__guess-column">
@@ -391,6 +474,7 @@ export function GameScreen({
                 <div className="game-screen__mashup-dial-slot">
                   <div className="game-screen__mashup-dial-header">
                     <ClipCountdown cardId={room.current_cards[0]?.deezer_id ?? null} totalSeconds={MASHUP_CLIP_SECONDS} size="sm" />
+                    <VolumeControl volume={volume} onChange={handleVolumeChange} />
                   </div>
                   <MashupTimeline
                     minYear={MASHUP_MIN_YEAR}
