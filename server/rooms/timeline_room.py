@@ -124,7 +124,13 @@ class TimelineRoom(GameRoom):
 
         self.lifecycle = RoomLifecycle.IN_PROGRESS
         self._deal_starting_cards()
-        self.current_player_id = self.players[0].player_id
+        # Randomized, not always the host — being first to join a room
+        # shouldn't mean always going first. Uses randrange (like
+        # _deal_starting_cards) rather than rng.choice: choice() calls
+        # _randbelow/getrandbits under the hood, not randrange, so a test's
+        # seeded/overridden rng (which only overrides randrange) wouldn't
+        # actually make it deterministic otherwise.
+        self.current_player_id = self.players[self.rng.randrange(len(self.players))].player_id
         self._start_turn(now)
 
     def _deal_starting_cards(self) -> None:

@@ -9,6 +9,6 @@ export const WS_URL = import.meta.env.VITE_WS_URL;
 // by hand — there's no shared source of truth across the language boundary.
 export const TURN_SECONDS = 75;
 export const STEAL_WINDOW_SECONDS = 40;
-export const STEAL_WINDOW_SKIPPED_SECONDS = 15;
+export const STEAL_WINDOW_SKIPPED_SECONDS = 7;
 export const REVEAL_SECONDS = 10;
 export const MAX_HINT_SLOTS = 3;

@@ -209,6 +209,30 @@ function VolumeControl({
   );
 }
 
+/** How long the first-turn announcement stays on screen before fading out
+ * and unmounting — must match FIRST_TURN_ANNOUNCEMENT_ANIMATION_MS in
+ * GameScreen.css's animation duration, since the JS timeout is what
+ * actually removes the element from the DOM (the CSS animation just
+ * handles the fade, it doesn't unmount anything on its own). */
+const FIRST_TURN_ANNOUNCEMENT_MS = 2600;
+
+/**
+ * A one-shot "X's turn" / "Your turn" announcement, shown only for the
+ * very first turn of a whole game — every player sees it (GameScreen
+ * mounts once per game and stays mounted for every subsequent turn, so a
+ * mount-only effect naturally fires exactly once, right when the game
+ * starts), each personalized: the acting player sees "Your turn", every
+ * spectator sees "<name>'s turn". Purely decorative — pointer-events: none
+ * so it never blocks the acting player from starting to play immediately.
+ */
+function TurnAnnouncement({ text }: { text: string }) {
+  return (
+    <div className="game-screen__turn-announcement" role="status">
+      <span className="game-screen__turn-announcement-text">{text}</span>
+    </div>
+  );
+}
+
 /**
  * The game screen shell: a sparse topbar (just the wordmark), a sidebar with
  * the viewing player's own info (YouPanel: tokens, turns taken) above the
@@ -267,6 +291,18 @@ export function GameScreen({
   const [mashupTouched, setMashupTouched] = useState(false);
   const [mashupSubmitted, setMashupSubmitted] = useState(false);
   const [volume, setVolume] = useState(readStoredVolume);
+  const [showFirstTurnAnnouncement, setShowFirstTurnAnnouncement] = useState(true);
+
+  // Mount-once, deliberately with an empty dependency array: GameScreen
+  // itself only mounts once per game (see LiveGameFlow — it stays mounted
+  // across every subsequent turn, only state_update props change), so this
+  // fires exactly once, right when the very first turn starts, and never
+  // again for turn 2 onward.
+  useEffect(() => {
+    const timeout = setTimeout(() => setShowFirstTurnAnnouncement(false), FIRST_TURN_ANNOUNCEMENT_MS);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally mount-once, see comment above
+  }, []);
 
   const handleVolumeChange = (next: number) => {
     setVolume(next);
@@ -391,6 +427,10 @@ export function GameScreen({
 
   return (
     <div className="game-screen">
+      {showFirstTurnAnnouncement && (
+        <TurnAnnouncement text={isActingPlayer ? "Your turn" : `${actingPlayer.name}'s turn`} />
+      )}
+
       <header className="game-screen__topbar">
         {onWordmarkClick ? (
           <button type="button" className="game-screen__wordmark game-screen__wordmark--link" onClick={onWordmarkClick}>

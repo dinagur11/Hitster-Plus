@@ -6,7 +6,7 @@ STEAL_WINDOW_SECONDS = 30
 # has enough tokens to attempt a steal — there's nothing to wait for, but
 # a brief, visible "skipped" beat is friendlier than jumping straight to
 # reveal with no explanation.
-STEAL_WINDOW_SKIPPED_SECONDS = 15
+STEAL_WINDOW_SKIPPED_SECONDS = 7
 # Once every valid slot has been attempted (right or wrong — correctness
 # isn't checked yet), the window has nothing left to wait ON, but still
 # holds for this long before revealing, so every player actually gets to

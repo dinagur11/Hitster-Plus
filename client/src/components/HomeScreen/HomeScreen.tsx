@@ -4,6 +4,7 @@ import "./HomeScreen.css";
 interface HomeScreenProps {
   onCreateGame: () => void;
   onJoinLobby: () => void;
+  onHowToPlay: () => void;
 }
 
 /**
@@ -13,7 +14,7 @@ interface HomeScreenProps {
  * each screen's onWordmarkClick) — this is the one place it's just static
  * text, since clicking it while already home would do nothing.
  */
-export function HomeScreen({ onCreateGame, onJoinLobby }: HomeScreenProps) {
+export function HomeScreen({ onCreateGame, onJoinLobby, onHowToPlay }: HomeScreenProps) {
   return (
     <div className="home-screen">
       <div className="home-screen__vinyl-wrap">
@@ -29,6 +30,9 @@ export function HomeScreen({ onCreateGame, onJoinLobby }: HomeScreenProps) {
         </button>
         <button type="button" className="home-screen__action home-screen__action--secondary" onClick={onJoinLobby}>
           Join lobby
+        </button>
+        <button type="button" className="home-screen__action home-screen__action--tertiary" onClick={onHowToPlay}>
+          How to play
         </button>
       </div>
     </div>

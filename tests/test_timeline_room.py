@@ -113,6 +113,29 @@ def test_start_game_deals_one_starting_card_per_player_and_removes_from_deck():
     assert room.current_player_id == "p1"
 
 
+def test_start_game_picks_first_player_via_rng_not_always_the_host():
+    """The first player is randomized (via room.rng), not hardcoded to
+    players[0]/the host — a rng that always picks the last index should
+    pick the last player, not the first."""
+
+    class AlwaysLastIndexRng(DeterministicRng):
+        def randrange(self, stop, *args, **kwargs):
+            return stop - 1
+
+    p1 = Player(player_id="p1", name="Alice")
+    p2 = Player(player_id="p2", name="Bob")
+    p3 = Player(player_id="p3", name="Carol")
+    room = make_room(
+        [p1, p2, p3],
+        deck=[make_card(1985, 10), make_card(1995, 11), make_card(2005, 12), make_card(2000, 13)],
+        rng=AlwaysLastIndexRng(),
+    )
+
+    room.start_game(NOW)
+
+    assert room.current_player_id == "p3"
+
+
 def test_start_game_rejects_deck_too_small_to_deal_everyone_a_card():
     p1 = Player(player_id="p1", name="Alice")
     p2 = Player(player_id="p2", name="Bob")

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CreateRoomScreen } from "../components/EntryScreen/CreateRoomScreen";
 import { JoinRoomScreen } from "../components/EntryScreen/JoinRoomScreen";
 import { HomeScreen } from "../components/HomeScreen/HomeScreen";
+import { HowToPlayScreen } from "../components/HowToPlayScreen/HowToPlayScreen";
 import { LobbyScreen } from "../components/LobbyScreen/LobbyScreen";
 import type { LobbyRoomView } from "../types";
 import { WS_URL } from "./config";
@@ -17,7 +18,7 @@ function toLobbyView(message: StateUpdateMessage): LobbyRoomView {
   };
 }
 
-type Screen = "home" | "create" | "join" | "lobby" | "started";
+type Screen = "home" | "create" | "join" | "lobby" | "started" | "how-to-play";
 
 /**
  * Home/create/join/roster/start_game wired to the real server. Once
@@ -132,6 +133,10 @@ export function LiveLobbyFlow() {
     setScreen("join");
   };
 
+  // No socket/game state involved — just a static rules page, so entering
+  // and leaving it never touches the connection.
+  const handleEnterHowToPlay = () => setScreen("how-to-play");
+
   // Actually leaves whatever room/connection is currently active — closing
   // the socket lets the server's own disconnect handling take over
   // (marking the player disconnected, starting their grace period) exactly
@@ -188,6 +193,10 @@ export function LiveLobbyFlow() {
     );
   }
 
+  if (screen === "how-to-play") {
+    return <HowToPlayScreen onBack={() => setScreen("home")} />;
+  }
+
   if (screen === "create") {
     return (
       <div>
@@ -203,5 +212,5 @@ export function LiveLobbyFlow() {
     );
   }
 
-  return <HomeScreen onCreateGame={handleEnterCreate} onJoinLobby={handleEnterJoin} />;
+  return <HomeScreen onCreateGame={handleEnterCreate} onJoinLobby={handleEnterJoin} onHowToPlay={handleEnterHowToPlay} />;
 }
