@@ -42,6 +42,13 @@ interface StealWindowProps {
    * button (already sent, nothing left to do) without disabling their
    * ability to still attempt a steal if they change their mind. */
   viewerHasSkipped?: boolean;
+  /** True once the viewer themself has confirmed a steal attempt this
+   * window (comes from state_update's attempted_slots, matched against
+   * the viewer's own player id) — disables their Skip button too and
+   * treats them the same as having skipped for the rest of the window:
+   * having already spent a token and made a call, "no thanks, I'll pass"
+   * isn't a real choice left to make anymore. */
+  viewerHasAttempted?: boolean;
   /** Sends skip_steal for the viewer. Omitted (or a no-op) hides the
    * button entirely, same convention as the other optional callbacks. */
   onSkip?: () => void;
@@ -74,6 +81,7 @@ export function StealWindow({
   skipped = false,
   skippedPlayerNames = [],
   viewerHasSkipped = false,
+  viewerHasAttempted = false,
   onSkip,
 }: StealWindowProps) {
   const zoneCount = timeline.length + 1;
@@ -82,11 +90,14 @@ export function StealWindow({
   // Confirm is shown (disabled if unaffordable) to any non-acting viewer
   // so the token cost is visible even to someone who can't currently pay
   // it — Skip stays token-gated since it's only meaningful for players who
-  // could otherwise have stolen.
+  // could otherwise have stolen. A player can still attempt a second,
+  // different slot after their first attempt (if they can still afford
+  // it) — only Skip stops being a real option once they've committed to
+  // an attempt, since "no thanks" isn't a real choice anymore.
   const canShowConfirm = !skipped && !isActingPlayer;
   const canShowSkip = canShowConfirm && tokensAvailable >= 1;
   const canAttemptAtAll = canShowSkip && !viewerHasSkipped;
-  const canSkip = canShowSkip && !viewerHasSkipped;
+  const canSkip = canShowSkip && !viewerHasSkipped && !viewerHasAttempted;
 
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const nameForSlot = (zoneIndex: number) => attemptedSlots.find((a) => a.slotIndex === zoneIndex)?.playerName;
@@ -133,7 +144,13 @@ export function StealWindow({
               type="button"
               className="steal-window__skip-btn"
               disabled={!canSkip}
-              title={viewerHasSkipped ? "You've already skipped this window" : "Decline to steal this round — free, no token spent"}
+              title={
+                viewerHasSkipped
+                  ? "You've already skipped this window"
+                  : viewerHasAttempted
+                    ? "You've already attempted a steal this window"
+                    : "Decline to steal this round — free, no token spent"
+              }
               onClick={() => onSkip?.()}
             >
               {viewerHasSkipped ? "Skipped" : "Skip"}

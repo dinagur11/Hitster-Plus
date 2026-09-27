@@ -22,6 +22,15 @@ so a mismatch is a signal to go listen and check, not something to
 silently paper over with the seed's historical year. Mismatches greater
 than 2 years in either direction are flagged as warnings for manual review.
 
+The search itself is per-storefront (the `country` param) — Apple's own
+default is the US store, and plenty of non-English/regional catalogs
+(Hebrew-language releases among them) simply aren't in it even though
+they're in the artist's home-market store. An entry whose title or artist
+contains Hebrew script is searched against the Israeli store (country=IL)
+instead of the default; everything else keeps searching the default store
+exactly as before, so this doesn't change matching/results for existing
+English (or other Latin-script) seed entries at all.
+
 Usage:
     pip install requests
     python build_general_deck.py
@@ -34,9 +43,10 @@ import sys
 from pathlib import Path
 
 import requests
+from rapidfuzz import fuzz
 
-SEED_FILE = Path(__file__).parent / "rock_seed.json"
-OUTPUT_FILE = Path(__file__).parent / "rock.json"
+SEED_FILE = Path(__file__).parent / "hebrew_seed.json"
+OUTPUT_FILE = Path(__file__).parent / "hebrew.json"
 
 ITUNES_SEARCH_URL = "https://itunes.apple.com/search"
 # Undocumented endpoint with an undocumented rate limit — this delay is a
@@ -50,6 +60,25 @@ COMPILATION_HINTS = (
     "greatest hits", "best of", "anthology", "essential", "collection",
     "karaoke", "tribute", "made famous by", "cover version",
 )
+
+# Hebrew (֐-׿) and Alphabetic Presentation Forms (יִ-ﭏ,
+# a handful of Hebrew ligatures/presentation variants also seen in the
+# wild) — either is enough to say "this entry needs the Israeli store."
+HEBREW_RE = re.compile(r"[֐-׿יִ-ﭏ]")
+
+# Storefront to search when neither the title nor the artist is in Latin
+# script — the default (unset country param) storefront is Apple's US
+# store, which plenty of non-US-market catalogs simply aren't in.
+HEBREW_STOREFRONT = "IL"
+
+
+def storefront_for(entry: dict) -> str | None:
+    """None means "use iTunes' own default store" (unset country param) —
+    exactly today's behavior for every non-Hebrew entry, so this changes
+    nothing about how English (or other Latin-script) seed entries match."""
+    if HEBREW_RE.search(entry["title"]) or HEBREW_RE.search(entry["artist"]):
+        return HEBREW_STOREFRONT
+    return None
 
 
 def normalize(text: str) -> str:
@@ -71,28 +100,66 @@ def upscale_artwork(url: str) -> str:
     return url.replace("100x100bb", "600x600bb") if url else ""
 
 
-def itunes_search(term: str, limit: int = 10) -> list[dict]:
-    resp = requests.get(
-        ITUNES_SEARCH_URL,
-        params={"term": term, "media": "music", "entity": "song", "limit": limit},
-        timeout=10,
-    )
+def itunes_search(term: str, limit: int = 10, country: str | None = None) -> list[dict]:
+    params = {"term": term, "media": "music", "entity": "song", "limit": limit}
+    if country is not None:
+        params["country"] = country
+    resp = requests.get(ITUNES_SEARCH_URL, params=params, timeout=10)
     resp.raise_for_status()
     return resp.json().get("results", [])
 
 
-def pick_best_result(results: list[dict], wanted_title: str, wanted_artist: str) -> dict | None:
-    """Among results matching the title/artist, prefer non-compilation
-    entries, and among those, the earliest release date — that's the best
-    available proxy for the original pressing without a second data source."""
-    wanted_title_norm = normalize(wanted_title)
-    wanted_artist_norm = normalize(wanted_artist)
+TITLE_MATCH_THRESHOLD = 85
+ARTIST_MATCH_THRESHOLD = 78
 
-    matching = [
+
+def _matching_results(results: list[dict], wanted_title_norm: str, wanted_artist_norm: str, fuzzy: bool) -> list[dict]:
+    if fuzzy:
+        # Real-world transliterated names (especially Hebrew -> Latin,
+        # where there's no single canonical spelling: "HaTarnegolim" vs
+        # iTunes' own "Hatarnegoolim", "Tamouz" vs "Tamuz") rarely come
+        # back letter-for-letter identical to however the seed happened to
+        # spell them. token_sort_ratio for the title tolerates word-order
+        # differences. token_set_ratio (not partial_ratio) for the artist:
+        # it tolerates iTunes crediting just the primary artist when the
+        # seed included a featured one ("Noa Kirel feat. Shahar Saul" vs
+        # iTunes' "Noa Kirel" scores 100, since every word in the shorter
+        # name appears in the longer one) without partial_ratio's failure
+        # mode on short names — partial_ratio scores "Netta" against the
+        # unrelated "Elektro Vendetta" at ~89 purely because "netta" is a
+        # character substring of "venDETTA", a false positive
+        # token_set_ratio doesn't make (~48, correctly low) since it
+        # compares whole word sets rather than raw character alignment.
+        return [
+            r for r in results
+            if fuzz.token_sort_ratio(wanted_title_norm, normalize(r.get("trackName", ""))) >= TITLE_MATCH_THRESHOLD
+            and fuzz.token_set_ratio(wanted_artist_norm, normalize(r.get("artistName", ""))) >= ARTIST_MATCH_THRESHOLD
+        ]
+    return [
         r for r in results
         if wanted_title_norm in normalize(r.get("trackName", ""))
         and wanted_artist_norm in normalize(r.get("artistName", ""))
     ]
+
+
+def pick_best_result(results: list[dict], wanted_title: str, wanted_artist: str, fuzzy: bool = False) -> dict | None:
+    """Among results matching the title/artist, prefer non-compilation
+    entries, and among those, the earliest release date — that's the best
+    available proxy for the original pressing without a second data source.
+
+    `fuzzy=False` (the default) is the original exact-substring behavior,
+    unchanged — every existing (English/Latin-script) seed entry that
+    already resolved correctly keeps matching exactly the same candidates,
+    ranked exactly the same way. `fuzzy=True` is strictly a fallback (see
+    resolve_song): it's only ever tried after the exact-substring pass
+    already came back empty, specifically so it can never change which
+    candidate wins for anything that already worked — it can only turn a
+    previous "no match" into a match.
+    """
+    wanted_title_norm = normalize(wanted_title)
+    wanted_artist_norm = normalize(wanted_artist)
+
+    matching = _matching_results(results, wanted_title_norm, wanted_artist_norm, fuzzy)
     if not matching:
         return None
 
@@ -106,13 +173,37 @@ def pick_best_result(results: list[dict], wanted_title: str, wanted_artist: str)
     return min(candidates, key=release_year)
 
 
+def _resolve_from_query(query: str, entry: dict, country: str | None) -> dict | None:
+    """One search + match attempt: exact-substring first, fuzzy only if
+    that finds nothing at all among these same results (see
+    pick_best_result's docstring for why fuzzy never overrides an exact
+    match). Returns None (not the raw results) if neither pass finds
+    anything — the caller doesn't need to know which pass would-be-matched."""
+    results = itunes_search(query, country=country)
+    if not results:
+        return None
+    best = pick_best_result(results, entry["title"], entry["artist"])
+    if best is None:
+        best = pick_best_result(results, entry["title"], entry["artist"], fuzzy=True)
+    return best
+
+
 def resolve_song(entry: dict) -> tuple[dict | None, str | None]:
     """Returns (card, warning). card is None if unresolvable."""
-    results = itunes_search(f'{entry["artist"]} {entry["title"]}')
-    if not results:
-        return None, None
+    country = storefront_for(entry)
+    best = _resolve_from_query(f'{entry["artist"]} {entry["title"]}', entry, country)
 
-    best = pick_best_result(results, entry["title"], entry["artist"])
+    # Combining a transliterated artist name with a Hebrew title in one
+    # query sometimes returns nothing at all from iTunes' own search
+    # ranking, even though either term alone would surface the song (seen
+    # repeatedly in practice — a combined query returning zero results
+    # where a title-only query for the exact same song returns several).
+    # Only tried once the combined query has already fully failed (exact
+    # and fuzzy both), so this never changes an already-working match either.
+    if best is None:
+        time.sleep(REQUEST_DELAY_SECONDS)
+        best = _resolve_from_query(entry["title"], entry, country)
+
     if best is None:
         return None, None
 

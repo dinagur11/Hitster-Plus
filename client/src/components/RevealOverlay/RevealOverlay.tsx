@@ -257,7 +257,7 @@ function MashupReveal({
   const kept = reveal.outcome === "correct";
   return (
     <>
-      <p className="reveal-overlay__mashup-heading">{actingName}'s mashup round</p>
+      <p className="reveal-overlay__mashup-heading">{actingName}'s Dial Round</p>
       <div className="reveal-overlay__mashup-cards">
         <div className="reveal-overlay__mashup-card">
           <RevealCard

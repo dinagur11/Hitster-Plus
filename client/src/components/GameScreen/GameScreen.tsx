@@ -209,26 +209,34 @@ function VolumeControl({
   );
 }
 
-/** How long the first-turn announcement stays on screen before fading out
- * and unmounting — must match FIRST_TURN_ANNOUNCEMENT_ANIMATION_MS in
- * GameScreen.css's animation duration, since the JS timeout is what
- * actually removes the element from the DOM (the CSS animation just
- * handles the fade, it doesn't unmount anything on its own). */
-const FIRST_TURN_ANNOUNCEMENT_MS = 2600;
+/** How long an announcement overlay stays on screen before fading out and
+ * unmounting — must match the animation durations in GameScreen.css
+ * (game-screen-turn-announcement-backdrop/-text), since the JS timeout is
+ * what actually removes the element from the DOM (the CSS animation just
+ * handles the fade, it doesn't unmount anything on its own). Shared by
+ * both the first-turn and Dial Round announcements — same beat for both. */
+const ANNOUNCEMENT_MS = 2600;
 
 /**
- * A one-shot "X's turn" / "Your turn" announcement, shown only for the
- * very first turn of a whole game — every player sees it (GameScreen
- * mounts once per game and stays mounted for every subsequent turn, so a
- * mount-only effect naturally fires exactly once, right when the game
- * starts), each personalized: the acting player sees "Your turn", every
- * spectator sees "<name>'s turn". Purely decorative — pointer-events: none
- * so it never blocks the acting player from starting to play immediately.
+ * A one-shot, purely decorative announcement overlay — pointer-events:
+ * none so it never blocks play underneath it. Two uses: the very first
+ * turn of a whole game ("X's turn" / "Your turn" — see the mount-only
+ * effect below, which is what limits it to just that one turn) and the
+ * start of a Dial Round ("Dial Round!" — see the turnKey-keyed effect,
+ * which fires once per turn whenever that turn's round_type is mashup).
+ * `variant` swaps in a differently-colored text class so the two don't
+ * read as visually identical events.
  */
-function TurnAnnouncement({ text }: { text: string }) {
+function Announcement({ text, variant = "turn" }: { text: string; variant?: "turn" | "dial-round" }) {
   return (
     <div className="game-screen__turn-announcement" role="status">
-      <span className="game-screen__turn-announcement-text">{text}</span>
+      <span
+        className={`game-screen__turn-announcement-text${
+          variant === "dial-round" ? " game-screen__turn-announcement-text--dial-round" : ""
+        }`}
+      >
+        {text}
+      </span>
     </div>
   );
 }
@@ -292,6 +300,7 @@ export function GameScreen({
   const [mashupSubmitted, setMashupSubmitted] = useState(false);
   const [volume, setVolume] = useState(readStoredVolume);
   const [showFirstTurnAnnouncement, setShowFirstTurnAnnouncement] = useState(true);
+  const [showDialRoundAnnouncement, setShowDialRoundAnnouncement] = useState(false);
 
   // Mount-once, deliberately with an empty dependency array: GameScreen
   // itself only mounts once per game (see LiveGameFlow — it stays mounted
@@ -299,10 +308,23 @@ export function GameScreen({
   // fires exactly once, right when the very first turn starts, and never
   // again for turn 2 onward.
   useEffect(() => {
-    const timeout = setTimeout(() => setShowFirstTurnAnnouncement(false), FIRST_TURN_ANNOUNCEMENT_MS);
+    const timeout = setTimeout(() => setShowFirstTurnAnnouncement(false), ANNOUNCEMENT_MS);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally mount-once, see comment above
   }, []);
+
+  // Keyed by turnKey (not round_type alone): fires once at the start of
+  // every turn, and shows the announcement only when that turn's round is
+  // a Dial Round — so it re-fires for each player's own Dial Round (once
+  // per player per game) rather than only ever on mount like the
+  // first-turn announcement above.
+  useEffect(() => {
+    if (room.round_type !== "mashup") return;
+    setShowDialRoundAnnouncement(true);
+    const timeout = setTimeout(() => setShowDialRoundAnnouncement(false), ANNOUNCEMENT_MS);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on turnKey deliberately, not room.round_type (which would retrigger on every unrelated state_update during the same turn)
+  }, [turnKey]);
 
   const handleVolumeChange = (next: number) => {
     setVolume(next);
@@ -422,13 +444,18 @@ export function GameScreen({
     (playerId) => room.players.find((p) => p.player_id === playerId)?.name ?? playerId,
   );
   const viewerHasSkipped = room.skipped_players.includes(viewingPlayerId);
+  const viewerHasAttempted = room.attempted_slots.some((attempt) => attempt.player_id === viewingPlayerId);
 
   if (actingPlayer === undefined) return null;
 
   return (
     <div className="game-screen">
-      {showFirstTurnAnnouncement && (
-        <TurnAnnouncement text={isActingPlayer ? "Your turn" : `${actingPlayer.name}'s turn`} />
+      {showDialRoundAnnouncement ? (
+        <Announcement text="Dial Round!" variant="dial-round" />
+      ) : (
+        showFirstTurnAnnouncement && (
+          <Announcement text={isActingPlayer ? "Your turn" : `${actingPlayer.name}'s turn`} />
+        )
       )}
 
       <header className="game-screen__topbar">
@@ -484,6 +511,7 @@ export function GameScreen({
                   </h3>
                   <input
                     type="text"
+                    dir="auto"
                     className="game-screen__guess-input"
                     placeholder="Artist"
                     value={displayGuessedArtist}
@@ -492,6 +520,7 @@ export function GameScreen({
                   />
                   <input
                     type="text"
+                    dir="auto"
                     className="game-screen__guess-input"
                     placeholder="Song title"
                     value={displayGuessedTitle}
@@ -579,6 +608,7 @@ export function GameScreen({
             skipped={room.steal_window_skipped}
             skippedPlayerNames={skippedPlayerNames}
             viewerHasSkipped={viewerHasSkipped}
+            viewerHasAttempted={viewerHasAttempted}
             onSkip={onSkipSteal}
           />
         ) : (

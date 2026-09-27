@@ -267,6 +267,27 @@ def test_skip_steal_by_all_eligible_players_shortens_deadline():
     assert room.phase == TimelinePhase.AWAITING_PLACEMENT
 
 
+def test_mixed_skip_and_attempt_by_all_eligible_players_shortens_deadline():
+    """Once every eligible player has decided one way or another — skip OR
+    a confirmed steal attempt — there's nothing left to wait on, even if
+    open slots remain (nobody left who could still take them)."""
+    p1 = Player(player_id="p1", name="Alice", timeline=[make_card(1990, 1), make_card(2010, 2)])
+    p2 = Player(player_id="p2", name="Bob", tokens=3)
+    p3 = Player(player_id="p3", name="Carol", tokens=3)
+    room = make_in_progress_room([p1, p2, p3], deck=[make_card(1980, 99)], current_cards=[make_card(2000, 3)])
+    room.finish_turn("p1", slot_index=0, now=NOW)  # 3 valid slots total; only 1 (slot 0) taken so far
+
+    room.attempt_steal("p2", slot_index=1, now=NOW)  # decided via attempt — slot 2 still open
+    assert room.steal_deadline == NOW + timedelta(seconds=STEAL_WINDOW_SECONDS)  # p3 hasn't decided yet
+
+    room.skip_steal("p3", now=NOW)  # decided via skip — now everyone eligible has decided
+
+    # An attempt badge exists (p2's), so this gets the longer "something to
+    # see" delay, not the bare skip-only delay.
+    assert room.steal_deadline == NOW + timedelta(seconds=STEAL_WINDOW_ALL_ATTEMPTED_DELAY_SECONDS)
+    assert room.phase == TimelinePhase.STEAL_WINDOW
+
+
 def test_skip_steal_does_not_prevent_attempting_afterward():
     p1 = Player(player_id="p1", name="Alice", timeline=[make_card(1990, 1)])
     p2 = Player(player_id="p2", name="Bob", tokens=3)

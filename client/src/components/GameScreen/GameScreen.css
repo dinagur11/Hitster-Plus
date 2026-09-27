@@ -98,10 +98,8 @@
 }
 
 .game-screen__mode-hint--timeline {
-  position: absolute;
-  top: 1rem;
-  left: 1.25rem;
-  margin: 0;
+  margin: 0 0 0.75rem;
+  text-align: center;
 }
 
 .game-screen__mode-hint--mashup {
@@ -262,7 +260,6 @@
    centered identically by the parent, rather than nested inside <main>
    where it could only ever match main's narrower content width. */
 .game-screen__timeline-area {
-  position: relative;
   width: 62.25rem;
   max-width: 100%;
   background: var(--surface-1);
@@ -270,7 +267,8 @@
   border: 1px solid var(--border-subtle);
   padding: 1.25rem;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Mashup's own panel — stays nested in <main>, so it only ever needs to
@@ -420,6 +418,13 @@
   text-align: center;
   padding: 0 1.5rem;
   animation: game-screen-turn-announcement-text 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Dial Round reads as its own distinct event, not just another turn
+   handoff — brass instead of amber, so the two never look identical even
+   though they share the same overlay mechanics. */
+.game-screen__turn-announcement-text--dial-round {
+  color: var(--color-brass);
 }
 
 @keyframes game-screen-turn-announcement-backdrop {
