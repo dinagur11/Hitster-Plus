@@ -28,6 +28,8 @@ from server.protocol.incoming import (
     FinishTurnMessage,
     InvalidIncomingMessageError,
     JoinRoomMessage,
+    KickPlayerMessage,
+    LeaveRoomMessage,
     ListThemesMessage,
     MashupPlacementMessage,
     MashupPreviewMessage,
@@ -44,6 +46,7 @@ from server.protocol.outgoing import (
     build_error,
     build_hint_response,
     build_joined,
+    build_kicked,
     build_mashup_preview,
     build_placement_preview,
     build_reconnected,
@@ -167,6 +170,64 @@ class WsHandler:
         player.connection_id = connection_id
         self.connections[connection_id] = websocket
         self.connection_location[connection_id] = (room_code, player.player_id)
+
+    async def _handle_leave_room(self, connection_id: str, websocket: ServerConnection, message: LeaveRoomMessage) -> None:
+        located = self._require_location(connection_id)
+        if located is None:
+            await self._send(websocket, build_error("not joined to a room"))
+            return
+        room, player_id = located
+
+        try:
+            self.room_manager.leave_room(room.room_id, player_id)
+        except IllegalActionError as exc:
+            await self._send(websocket, build_error(str(exc)))
+            return
+
+        # The leaving player's own connection is done with this room —
+        # same bookkeeping _handle_disconnect does for a real drop, just
+        # triggered deliberately instead of by ConnectionClosed. Their
+        # websocket itself stays open (they're still connected to the
+        # server, just no longer attached to any room) so they can create
+        # or join a different one on the same connection.
+        self.connections.pop(connection_id, None)
+        self.connection_location.pop(connection_id, None)
+        self._pending_placements.pop(connection_id, None)
+
+        if room.room_id in self.room_manager.rooms:
+            await self._broadcast_state(room)
+        else:
+            self._cancel_room_timer(room.room_id)  # the room emptied out and was removed
+
+    async def _handle_kick_player(self, connection_id: str, websocket: ServerConnection, message: KickPlayerMessage) -> None:
+        located = self._require_location(connection_id)
+        if located is None:
+            await self._send(websocket, build_error("not joined to a room"))
+            return
+        room, player_id = located
+
+        try:
+            kicked = self.room_manager.kick_player(room.room_id, player_id, message.player_id)
+        except IllegalActionError as exc:
+            await self._send(websocket, build_error(str(exc)))
+            return
+
+        # Tell the kicked player, then force-close their connection — the
+        # ordinary ConnectionClosed -> _handle_disconnect path then does
+        # its usual cleanup (pop connections/connection_location); it's a
+        # harmless no-op against the room by that point since kick_player
+        # already removed them from room.players (mark_disconnected raises
+        # RoomNotFoundError for an unknown player, which _handle_disconnect
+        # already catches and swallows).
+        kicked_ws = self.connections.get(kicked.connection_id) if kicked.connection_id else None
+        if kicked_ws is not None:
+            await self._send(kicked_ws, build_kicked())
+            try:
+                await kicked_ws.close()
+            except ConnectionClosed:
+                pass
+
+        await self._broadcast_state(room)
 
     # -- in-game actions --------------------------------------------------------
 
@@ -508,6 +569,8 @@ WsHandler._MESSAGE_HANDLERS = {
     StartGameMessage: WsHandler._handle_start_game,
     JoinRoomMessage: WsHandler._handle_join_room,
     ReconnectMessage: WsHandler._handle_reconnect,
+    LeaveRoomMessage: WsHandler._handle_leave_room,
+    KickPlayerMessage: WsHandler._handle_kick_player,
     PlaceCardMessage: WsHandler._handle_place_card,
     FinishTurnMessage: WsHandler._handle_finish_turn,
     StealAttemptMessage: WsHandler._handle_steal_attempt,

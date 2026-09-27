@@ -100,3 +100,19 @@
   padding: 0.15rem 0.5rem;
   flex-shrink: 0;
 }
+
+.players-panel__kick-btn {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: color-mix(in srgb, #b23b2e 70%, var(--color-paper) 30%);
+  background: none;
+  border: 1px solid color-mix(in srgb, #b23b2e 45%, var(--border-subtle) 55%);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.players-panel__kick-btn:hover {
+  background: color-mix(in srgb, #b23b2e 15%, transparent);
+}

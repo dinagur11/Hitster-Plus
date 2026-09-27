@@ -251,6 +251,16 @@ def build_themes(themes: list[str]) -> dict:
     }
 
 
+def build_kicked() -> dict:
+    """Sent once, privately, to a player's own connection right before the
+    server force-closes it — the host removed them from the lobby. Lets
+    the client show a specific "you were kicked" message rather than just
+    a generic dropped-connection state."""
+    return {
+        "type": "kicked",
+    }
+
+
 def build_error(message: str) -> dict:
     """A clean rejection response — malformed message, wrong phase, wrong
     turn, invalid token, etc. Never let the client see a raw exception.

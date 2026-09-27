@@ -6,7 +6,13 @@ import pytest
 from server.config import CAPPED_WIN_TIMELINE_LENGTH, PLAYER_DISCONNECT_GRACE_SECONDS, ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH, WIN_TIMELINE_LENGTH
 from server.models.card import Card
 from server.models.enums import RoomLifecycle
-from server.rooms.errors import InvalidReconnectTokenError, InvalidThemeError, RoomNotFoundError, RoomNotJoinableError
+from server.rooms.errors import (
+    IllegalActionError,
+    InvalidReconnectTokenError,
+    InvalidThemeError,
+    RoomNotFoundError,
+    RoomNotJoinableError,
+)
 from server.rooms.room_manager import RoomManager
 
 NOW = datetime(2026, 1, 1, 12, 0, 0)
@@ -217,3 +223,100 @@ def test_sweep_removes_room_if_last_player_expires():
 
     assert room.room_id not in manager.rooms
     assert host_token not in manager._tokens
+
+
+# -- leave_room / kick_player (lobby only) -------------------------------------
+
+
+def test_leave_room_removes_player_outright_and_frees_token():
+    manager = RoomManager()
+    room, host, _ = manager.create_room("Alice")
+    _, guest, guest_token = manager.join_room(room.room_id, "Bob")
+
+    manager.leave_room(room.room_id, guest.player_id)
+
+    assert room.players == [host]
+    assert guest_token not in manager._tokens
+
+
+def test_leave_room_reassigns_host_to_next_player():
+    manager = RoomManager()
+    room, host, host_token = manager.create_room("Alice")
+    _, guest, _ = manager.join_room(room.room_id, "Bob")
+
+    manager.leave_room(room.room_id, host.player_id)
+
+    assert room.host_id == guest.player_id
+    assert guest.is_host is True
+    assert host_token not in manager._tokens
+
+
+def test_leave_room_by_last_player_removes_the_room():
+    manager = RoomManager()
+    room, host, host_token = manager.create_room("Alice")
+
+    manager.leave_room(room.room_id, host.player_id)
+
+    assert room.room_id not in manager.rooms
+    assert host_token not in manager._tokens
+
+
+def test_leave_room_rejected_once_game_started():
+    manager = RoomManager()
+    room, host, _ = manager.create_room("Alice")
+    _, guest, _ = manager.join_room(room.room_id, "Bob")
+    room.rng = NeverMashup()
+    room.start_game(NOW)
+
+    with pytest.raises(IllegalActionError):
+        manager.leave_room(room.room_id, guest.player_id)
+
+
+def test_kick_player_removes_target_and_frees_token():
+    manager = RoomManager()
+    room, host, _ = manager.create_room("Alice")
+    _, guest, guest_token = manager.join_room(room.room_id, "Bob")
+
+    kicked = manager.kick_player(room.room_id, host.player_id, guest.player_id)
+
+    assert kicked is guest
+    assert room.players == [host]
+    assert guest_token not in manager._tokens
+
+
+def test_kick_player_rejected_for_non_host():
+    manager = RoomManager()
+    room, host, _ = manager.create_room("Alice")
+    _, guest, _ = manager.join_room(room.room_id, "Bob")
+    _, other, _ = manager.join_room(room.room_id, "Carol")
+
+    with pytest.raises(IllegalActionError):
+        manager.kick_player(room.room_id, guest.player_id, other.player_id)
+    assert room.players == [host, guest, other]
+
+
+def test_kick_player_rejected_for_self_kick():
+    manager = RoomManager()
+    room, host, _ = manager.create_room("Alice")
+
+    with pytest.raises(IllegalActionError):
+        manager.kick_player(room.room_id, host.player_id, host.player_id)
+
+
+def test_kick_player_rejected_once_game_started():
+    manager = RoomManager()
+    room, host, _ = manager.create_room("Alice")
+    _, guest, _ = manager.join_room(room.room_id, "Bob")
+    room.rng = NeverMashup()
+    room.start_game(NOW)
+
+    with pytest.raises(IllegalActionError):
+        manager.kick_player(room.room_id, host.player_id, guest.player_id)
+
+
+def test_kick_player_rejected_for_unknown_target():
+    manager = RoomManager()
+    room, host, _ = manager.create_room("Alice")
+
+    with pytest.raises(RoomNotFoundError):
+        manager.kick_player(room.room_id, host.player_id, "no-such-player")

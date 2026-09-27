@@ -6,6 +6,12 @@ interface PlayersPanelProps {
   /** Omitted in the lobby — nobody has a turn yet, so no row shows the "Turn" tag. */
   activePlayerId?: string;
   viewingPlayerId: string;
+  /** Host-only kick control. Omitted (the default — every GameScreen
+   * usage, and LobbyScreen for a non-host viewer) hides the button
+   * entirely; passed only by LobbyScreen when the viewer is the host,
+   * since kicking is lobby-only (see KickPlayerMessage). Never rendered
+   * on the host's own row or a row already flagged as host. */
+  onKick?: (playerId: string) => void;
 }
 
 /**
@@ -14,7 +20,7 @@ interface PlayersPanelProps {
  * actual tokens/fonts rather than its Material-3 look. A proper side
  * panel, not a top strip — shown on both round types.
  */
-export function PlayersPanel({ players, activePlayerId, viewingPlayerId }: PlayersPanelProps) {
+export function PlayersPanel({ players, activePlayerId, viewingPlayerId, onKick }: PlayersPanelProps) {
   return (
     <aside className="players-panel">
       <h3 className="players-panel__heading">Players</h3>
@@ -44,6 +50,16 @@ export function PlayersPanel({ players, activePlayerId, viewingPlayerId }: Playe
                 </span>
               </div>
               {isActive && <span className="players-panel__turn-tag">Turn</span>}
+              {onKick && !isYou && !player.is_host && (
+                <button
+                  type="button"
+                  className="players-panel__kick-btn"
+                  title={`Kick ${player.name} from the lobby`}
+                  onClick={() => onKick(player.player_id)}
+                >
+                  Kick
+                </button>
+              )}
             </div>
           );
         })}

@@ -83,6 +83,18 @@ export interface ReconnectMessage {
   reconnect_token: string;
 }
 
+/** No fields: leave the current room outright, lobby only — see
+ * server/protocol/incoming.py's LeaveRoomMessage. */
+export interface LeaveRoomMessage {
+  type: "leave_room";
+}
+
+/** Host-only, lobby-only: removes `player_id` from the room. */
+export interface KickPlayerMessage {
+  type: "kick_player";
+  player_id: string;
+}
+
 export interface PlaceCardMessage {
   type: "place_card";
   slot_index: number;
@@ -136,6 +148,8 @@ export type OutgoingMessage =
   | StartGameMessage
   | JoinRoomMessage
   | ReconnectMessage
+  | LeaveRoomMessage
+  | KickPlayerMessage
   | PlaceCardMessage
   | FinishTurnMessage
   | StealAttemptMessage
@@ -164,6 +178,12 @@ export interface ReconnectedMessage {
 export interface ErrorMessage {
   type: "error";
   message: string;
+}
+
+/** Sent once, privately, right before the server force-closes this
+ * connection — the host removed this player from the lobby. */
+export interface KickedMessage {
+  type: "kicked";
 }
 
 export interface StateUpdateMessage {
@@ -272,6 +292,7 @@ export type IncomingMessage =
   | JoinedMessage
   | ReconnectedMessage
   | ErrorMessage
+  | KickedMessage
   | StateUpdateMessage
   | PlacementPreviewMessage
   | MashupPreviewBroadcastMessage

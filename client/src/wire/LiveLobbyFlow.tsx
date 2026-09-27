@@ -39,6 +39,11 @@ export function LiveLobbyFlow() {
   const [room, setRoom] = useState<LobbyRoomView | null>(null);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Shown once, on the home screen, right after the host kicks this
+  // player out of a lobby — null the rest of the time. Separate from
+  // `error` since it needs to survive the trip back to the home screen
+  // (error is cleared/only shown on the create/join/lobby screens).
+  const [kickedNotice, setKickedNotice] = useState<string | null>(null);
   // Null until the "themes" reply lands (requested on entering the create
   // screen) — CreateRoomScreen treats null as "still loading" and only
   // ever offers a playlist the server just confirmed it can actually play
@@ -57,10 +62,31 @@ export function LiveLobbyFlow() {
         case "joined":
           setViewingPlayerId(message.player_id);
           setError(null);
+          setKickedNotice(null);
           break;
         case "reconnected":
           setViewingPlayerId(message.player_id);
           setError(null);
+          setKickedNotice(null);
+          break;
+        case "kicked":
+          // Deliberately not calling handleGoHome here: this effect only
+          // ever subscribes once (its dependency array is just
+          // [subscribe], a stable reference), so a closure over anything
+          // that changes across renders — handleGoHome included, since
+          // it's a plain function recreated every render — would stay
+          // frozen at whatever it was on the very first render. `socket`
+          // and the setState setters are stable refs, so those are safe
+          // to use directly here; everything else is inlined instead.
+          socket?.disconnect();
+          socket?.clearStoredReconnectToken();
+          setRoom(null);
+          setViewingPlayerId(null);
+          setError(null);
+          setStarting(false);
+          setGameStartMessage(null);
+          setKickedNotice("You were removed from the lobby by the host.");
+          setScreen("home");
           break;
         case "state_update":
           if (message.lifecycle === "lobby") {
@@ -84,6 +110,7 @@ export function LiveLobbyFlow() {
           break;
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- socket is a stable ref (useGameSocket backs it with a useRef, never a new identity across renders), so it's safe to read here without retriggering this effect
   }, [subscribe]);
 
   const handleCreate = (displayName: string, theme: string) => {
@@ -102,6 +129,11 @@ export function LiveLobbyFlow() {
     send({ type: "start_game" });
   };
 
+  const handleKick = (playerId: string) => {
+    setError(null);
+    send({ type: "kick_player", player_id: playerId });
+  };
+
   // The socket connects once on mount and stays open for reuse across
   // create/join/lobby/game — reconnecting here would just be wasted round
   // trips. Only reconnect if handleGoHome actually tore the connection
@@ -113,6 +145,7 @@ export function LiveLobbyFlow() {
   const handleEnterCreate = () => {
     ensureConnected();
     setAvailableThemes(null);
+    setKickedNotice(null);
     setScreen("create");
   };
 
@@ -130,6 +163,7 @@ export function LiveLobbyFlow() {
 
   const handleEnterJoin = () => {
     ensureConnected();
+    setKickedNotice(null);
     setScreen("join");
   };
 
@@ -137,12 +171,17 @@ export function LiveLobbyFlow() {
   // and leaving it never touches the connection.
   const handleEnterHowToPlay = () => setScreen("how-to-play");
 
-  // Actually leaves whatever room/connection is currently active — closing
-  // the socket lets the server's own disconnect handling take over
-  // (marking the player disconnected, starting their grace period) exactly
-  // as if the tab had been closed, rather than silently abandoning a
-  // connection the server still thinks is live.
+  // Actually leaves whatever room/connection is currently active. From the
+  // lobby specifically, sends leave_room first — removed outright
+  // server-side (see RoomManager.leave_room) rather than just marked
+  // disconnected, so this player doesn't linger as a reconnectable ghost
+  // for PLAYER_DISCONNECT_GRACE_SECONDS (previously: leaving and rejoining
+  // under the same name showed two rows for a full minute). Then closes
+  // the socket regardless — the server's own disconnect handling would
+  // otherwise take over anyway, but by then leave_room has already
+  // detached this connection from the room, so that's a no-op.
   const handleGoHome = () => {
+    if (screen === "lobby") send({ type: "leave_room" });
     socket?.disconnect();
     socket?.clearStoredReconnectToken();
     setRoom(null);
@@ -173,6 +212,7 @@ export function LiveLobbyFlow() {
         onStart={handleStart}
         starting={starting}
         error={error}
+        onKick={handleKick}
         onWordmarkClick={handleGoHome}
       />
     );
@@ -212,5 +252,12 @@ export function LiveLobbyFlow() {
     );
   }
 
-  return <HomeScreen onCreateGame={handleEnterCreate} onJoinLobby={handleEnterJoin} onHowToPlay={handleEnterHowToPlay} />;
+  return (
+    <div>
+      {kickedNotice && (
+        <p style={{ padding: "0.5rem 1rem", textAlign: "center", color: "var(--color-amber)" }}>{kickedNotice}</p>
+      )}
+      <HomeScreen onCreateGame={handleEnterCreate} onJoinLobby={handleEnterJoin} onHowToPlay={handleEnterHowToPlay} />
+    </div>
+  );
 }

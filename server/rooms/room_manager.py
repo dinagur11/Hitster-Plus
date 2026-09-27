@@ -33,7 +33,13 @@ from server.config import (
 from server.deck.loader import available_themes, load_theme
 from server.models.enums import RoomLifecycle
 from server.models.player import Player
-from server.rooms.errors import InvalidReconnectTokenError, InvalidThemeError, RoomNotFoundError, RoomNotJoinableError
+from server.rooms.errors import (
+    IllegalActionError,
+    InvalidReconnectTokenError,
+    InvalidThemeError,
+    RoomNotFoundError,
+    RoomNotJoinableError,
+)
 from server.rooms.timeline_room import TimelineRoom
 
 # Only the "general" theme uses the full WIN_TIMELINE_LENGTH — every other
@@ -120,6 +126,74 @@ class RoomManager:
         room.players.append(player)
         self._tokens[token] = (room_code, player.player_id)
         return room, player, token
+
+    # -- leave / kick (lobby only) ---------------------------------------------
+
+    def _remove_player_from_lobby(self, room_code: str, player_id: str) -> Player:
+        """Shared removal path for leave_room and kick_player: both mean
+        the same thing to room state (the player is just gone, not merely
+        disconnected), only who's allowed to trigger it differs — that
+        check stays with each public method's own caller. Returns the
+        removed Player so a caller (kick_player) that still needs to reach
+        their live connection can do so; leave_room's caller has no further
+        use for it.
+
+        Reassigns host to the next remaining player (join order) if the
+        removed player was the host — a lobby a leaving/kicked host would
+        otherwise strand, since only the host can start the game. A room
+        left with zero players is removed outright, same as every other
+        empty-room path.
+        """
+        room = self.rooms.get(room_code)
+        if room is None:
+            raise RoomNotFoundError(f"no room with code {room_code!r}")
+        if room.lifecycle != RoomLifecycle.LOBBY:
+            raise IllegalActionError(f"room {room_code!r} is no longer in its lobby phase")
+
+        player = next((p for p in room.players if p.player_id == player_id), None)
+        if player is None:
+            raise RoomNotFoundError(f"no player {player_id!r} in room {room_code!r}")
+
+        room.players = [p for p in room.players if p.player_id != player_id]
+        self._tokens.pop(player.reconnect_token, None)
+
+        if not room.players:
+            self._remove_room(room_code)
+            return player
+
+        if room.host_id == player_id:
+            new_host = room.players[0]
+            new_host.is_host = True
+            room.host_id = new_host.player_id
+
+        return player
+
+    def leave_room(self, room_code: str, player_id: str) -> None:
+        """A player deliberately leaving their own room, lobby only — see
+        LeaveRoomMessage. Removes them outright rather than just marking
+        them disconnected (mark_disconnected's job for an ordinary
+        connection drop), so they don't linger as a reconnectable ghost
+        for PLAYER_DISCONNECT_GRACE_SECONDS after a choice they already
+        made deliberately.
+        """
+        self._remove_player_from_lobby(room_code, player_id)
+
+    def kick_player(self, room_code: str, requester_id: str, target_player_id: str) -> Player:
+        """The host removing another player from their own room, lobby
+        only — see KickPlayerMessage. Returns the removed Player so the
+        caller (ws_handler) can notify and force-close their live
+        connection; unlike leave_room, the removed player didn't initiate
+        this themself and has no other way to find out.
+        """
+        room = self.rooms.get(room_code)
+        if room is None:
+            raise RoomNotFoundError(f"no room with code {room_code!r}")
+        if requester_id != room.host_id:
+            raise IllegalActionError("only the host can kick players")
+        if target_player_id == requester_id:
+            raise IllegalActionError("the host cannot kick themself")
+
+        return self._remove_player_from_lobby(room_code, target_player_id)
 
     # -- disconnect / reconnect / cleanup --------------------------------------
 

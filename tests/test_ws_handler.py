@@ -51,9 +51,13 @@ class FakeWebSocket:
     def __init__(self, incoming: list[str] | None = None):
         self.sent: list[dict] = []
         self._incoming = list(incoming or [])
+        self.closed = False
 
     async def send(self, data: str) -> None:
         self.sent.append(json.loads(data))
+
+    async def close(self) -> None:
+        self.closed = True
 
     def __aiter__(self):
         return self
@@ -313,6 +317,92 @@ async def test_create_room_dispatch_rejects_unknown_theme():
 
     assert ws.types_sent() == ["error"]
     assert manager.rooms == {}
+
+
+# -- leave_room / kick_player dispatch -----------------------------------------
+
+
+async def test_leave_room_dispatch_removes_player_and_broadcasts():
+    manager = RoomManager()
+    room, host, host_token = manager.create_room("Alice")
+    _, guest, guest_token = manager.join_room(room.room_id, "Bob")
+
+    handler = WsHandler(manager)
+    host_ws = FakeWebSocket()
+    guest_ws = FakeWebSocket()
+    await send_raw(handler, "conn-host", host_ws, {"type": "reconnect", "reconnect_token": host_token})
+    await send_raw(handler, "conn-guest", guest_ws, {"type": "reconnect", "reconnect_token": guest_token})
+    host_ws.sent.clear()
+
+    await send_raw(handler, "conn-guest", guest_ws, {"type": "leave_room"})
+
+    assert room.players == [host]
+    # The remaining player (host) hears about it via a fresh state_update.
+    state_update = next(m for m in host_ws.sent if m["type"] == "state_update")
+    assert [p["player_id"] for p in state_update["players"]] == [host.player_id]
+    # The leaver's own connection is detached from the room, not closed —
+    # they can still create/join another room on the same socket.
+    assert "conn-guest" not in handler.connection_location
+    assert guest_ws.closed is False
+
+
+async def test_leave_room_dispatch_rejected_once_game_started():
+    manager = RoomManager()
+    room, host, host_token = manager.create_room("Alice")
+    _, guest, guest_token = manager.join_room(room.room_id, "Bob")
+    room.deck = [make_card(1970, 5), make_card(1975, 6), make_card(2000, 1)]
+
+    handler = WsHandler(manager)
+    host_ws = FakeWebSocket()
+    guest_ws = FakeWebSocket()
+    await send_raw(handler, "conn-host", host_ws, {"type": "reconnect", "reconnect_token": host_token})
+    await send_raw(handler, "conn-guest", guest_ws, {"type": "reconnect", "reconnect_token": guest_token})
+    await send_raw(handler, "conn-host", host_ws, {"type": "start_game"})
+
+    await send_raw(handler, "conn-guest", guest_ws, {"type": "leave_room"})
+
+    assert guest_ws.types_sent()[-1] == "error"
+    assert guest in room.players
+
+
+async def test_kick_player_dispatch_notifies_and_closes_kicked_connection():
+    manager = RoomManager()
+    room, host, host_token = manager.create_room("Alice")
+    _, guest, guest_token = manager.join_room(room.room_id, "Bob")
+
+    handler = WsHandler(manager)
+    host_ws = FakeWebSocket()
+    guest_ws = FakeWebSocket()
+    await send_raw(handler, "conn-host", host_ws, {"type": "reconnect", "reconnect_token": host_token})
+    await send_raw(handler, "conn-guest", guest_ws, {"type": "reconnect", "reconnect_token": guest_token})
+    host_ws.sent.clear()
+    guest_ws.sent.clear()
+
+    await send_raw(handler, "conn-host", host_ws, {"type": "kick_player", "player_id": guest.player_id})
+
+    assert room.players == [host]
+    assert guest_ws.types_sent() == ["kicked"]
+    assert guest_ws.closed is True
+    state_update = next(m for m in host_ws.sent if m["type"] == "state_update")
+    assert [p["player_id"] for p in state_update["players"]] == [host.player_id]
+
+
+async def test_kick_player_dispatch_rejected_for_non_host():
+    manager = RoomManager()
+    room, host, host_token = manager.create_room("Alice")
+    _, guest, guest_token = manager.join_room(room.room_id, "Bob")
+    _, other, other_token = manager.join_room(room.room_id, "Carol")
+
+    handler = WsHandler(manager)
+    guest_ws = FakeWebSocket()
+    other_ws = FakeWebSocket()
+    await send_raw(handler, "conn-guest", guest_ws, {"type": "reconnect", "reconnect_token": guest_token})
+    await send_raw(handler, "conn-other", other_ws, {"type": "reconnect", "reconnect_token": other_token})
+
+    await send_raw(handler, "conn-guest", guest_ws, {"type": "kick_player", "player_id": other.player_id})
+
+    assert guest_ws.types_sent()[-1] == "error"
+    assert other in room.players
 
 
 async def test_start_game_rejected_for_non_host():

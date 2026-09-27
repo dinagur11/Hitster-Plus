@@ -10,6 +10,11 @@ interface LobbyScreenProps {
   onStart: () => void;
   starting?: boolean;
   error?: string | null;
+  /** Sends the real kick_player message for the given player id. Omitted
+   * (the fixture-only standalone views) hides every Kick button — see
+   * PlayersPanel's own onKick prop, which this is passed straight
+   * through to only when the viewer is host. */
+  onKick?: (playerId: string) => void;
   /** Wordmark click -> home. Omitted (rather than defaulted to a no-op)
    * renders the wordmark as plain text, matching HomeScreen's own
    * non-clickable one — no dangling affordance for a caller that hasn't
@@ -35,6 +40,7 @@ export function LobbyScreen({
   onStart,
   starting = false,
   error = null,
+  onKick,
   onWordmarkClick,
 }: LobbyScreenProps) {
   const viewingPlayer = room.players.find((p) => p.player_id === viewingPlayerId)!;
@@ -54,7 +60,11 @@ export function LobbyScreen({
       </header>
 
       <div className="lobby-screen__body">
-        <PlayersPanel players={room.players} viewingPlayerId={viewingPlayerId} />
+        <PlayersPanel
+          players={room.players}
+          viewingPlayerId={viewingPlayerId}
+          onKick={isHost ? onKick : undefined}
+        />
 
         <main className="lobby-screen__main">
           <div className="lobby-screen__code-card">

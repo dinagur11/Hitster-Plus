@@ -55,6 +55,29 @@ class ReconnectMessage(BaseModel):
     reconnect_token: str
 
 
+class LeaveRoomMessage(BaseModel):
+    """No fields: a player deliberately leaving their room while it's
+    still in the lobby (pre-game). Unlike an ordinary connection drop
+    (which only marks the player disconnected — see
+    RoomManager.mark_disconnected — and leaves them reconnectable for
+    PLAYER_DISCONNECT_GRACE_SECONDS), this removes them outright, frees
+    their reconnect token, and reassigns host if they were the host. Lobby
+    only — leaving mid-game keeps the existing disconnect/reconnect
+    behavior instead, since other players' turns depend on that player
+    still existing."""
+
+    type: Literal["leave_room"] = "leave_room"
+
+
+class KickPlayerMessage(BaseModel):
+    """Host-only, lobby-only: removes `player_id` from the room outright,
+    same effect as that player sending leave_room themself. See
+    RoomManager.kick_player."""
+
+    type: Literal["kick_player"] = "kick_player"
+    player_id: str
+
+
 class PlaceCardMessage(BaseModel):
     type: Literal["place_card"] = "place_card"
     slot_index: int = Field(ge=0)
@@ -114,6 +137,8 @@ IncomingMessage = Annotated[
         StartGameMessage,
         JoinRoomMessage,
         ReconnectMessage,
+        LeaveRoomMessage,
+        KickPlayerMessage,
         PlaceCardMessage,
         FinishTurnMessage,
         StealAttemptMessage,
