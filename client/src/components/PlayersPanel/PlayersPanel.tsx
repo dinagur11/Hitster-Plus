@@ -10,9 +10,9 @@ interface PlayersPanelProps {
 
 /**
  * The player roster — brought back from the original mockup's concept
- * (every player, how many cards they have), restyled onto our actual
- * tokens/fonts rather than its Material-3 look. A proper side panel, not a
- * top strip — shown on both round types.
+ * (every player, how many cards and tokens they have), restyled onto our
+ * actual tokens/fonts rather than its Material-3 look. A proper side
+ * panel, not a top strip — shown on both round types.
  */
 export function PlayersPanel({ players, activePlayerId, viewingPlayerId }: PlayersPanelProps) {
   return (
@@ -37,6 +37,9 @@ export function PlayersPanel({ players, activePlayerId, viewingPlayerId }: Playe
                   {player.is_host && <span className="players-panel__host">Host</span>}
                   <span className="players-panel__cards">
                     {player.timeline.length} {player.timeline.length === 1 ? "card" : "cards"}
+                  </span>
+                  <span className="players-panel__tokens">
+                    {player.tokens} {player.tokens === 1 ? "token" : "tokens"}
                   </span>
                 </span>
               </div>

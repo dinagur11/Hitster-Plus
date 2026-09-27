@@ -86,6 +86,11 @@
   color: var(--text-muted);
 }
 
+.players-panel__tokens {
+  font-size: 0.75rem;
+  color: var(--color-brass);
+}
+
 .players-panel__turn-tag {
   font-size: 0.68rem;
   font-weight: 600;

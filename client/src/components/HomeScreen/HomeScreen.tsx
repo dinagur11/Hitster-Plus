@@ -22,7 +22,7 @@ export function HomeScreen({ onCreateGame, onJoinLobby, onHowToPlay }: HomeScree
       </div>
 
       <h1 className="home-screen__title">Hitster+</h1>
-      <p className="home-screen__tagline">Guess the year. Build the timeline. Steal the win.</p>
+      <p className="home-screen__tagline">Your playlist knowledge, on the line.</p>
 
       <div className="home-screen__actions">
         <button type="button" className="home-screen__action home-screen__action--primary" onClick={onCreateGame}>

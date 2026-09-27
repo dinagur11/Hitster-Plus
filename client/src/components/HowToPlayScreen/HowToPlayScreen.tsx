@@ -44,10 +44,10 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    heading: "Mashup rounds",
+    heading: "Dial Round",
     body: [
-      "Once per game, one of your turns becomes a mashup round instead — you'll know because you'll place the card on a year dial instead of the usual gap-based timeline.",
-      "Guess the song's exact release year: within 10 years keeps the card, and an exact guess also earns a bonus token. There's no steal window on a mashup round.",
+      "Once per game, one of your turns becomes a Dial Round instead — you'll know because you'll place the card on a year dial instead of the usual gap-based timeline.",
+      "Guess the song's exact release year: within 10 years keeps the card, and an exact guess also earns a bonus token. There's no steal window on a Dial Round.",
     ],
   },
 ];
@@ -68,7 +68,7 @@ export function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
 
       <div className="how-to-play-screen__panel">
         <span className="how-to-play-screen__eyebrow">How to play</span>
-        <h1 className="how-to-play-screen__headline">Guess the year. Build the timeline. Steal the win.</h1>
+        <h1 className="how-to-play-screen__headline">Your playlist knowledge, on the line.</h1>
 
         <div className="how-to-play-screen__sections">
           {SECTIONS.map((section) => (
