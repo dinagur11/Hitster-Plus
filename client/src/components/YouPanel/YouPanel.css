@@ -17,12 +17,6 @@
   color: var(--color-amber);
 }
 
-.you-panel__name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 .you-panel__stats {
   display: flex;
   gap: 0.6rem;

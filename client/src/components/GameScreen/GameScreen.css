@@ -85,6 +85,7 @@
   font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 600;
+  color: var(--color-sand);
 }
 
 .game-screen__player-meta {
@@ -100,6 +101,7 @@
 .game-screen__mode-hint--timeline {
   margin: 0 0 0.75rem;
   text-align: center;
+  color: var(--color-sand);
 }
 
 .game-screen__mode-hint--mashup {
@@ -133,7 +135,7 @@
    different thing at a glance. */
 .game-screen__track-timer {
   position: absolute;
-  bottom: 3.1rem;
+  bottom: 2.8rem;
   left: -0.75rem;
 }
 

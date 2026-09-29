@@ -52,7 +52,6 @@ export function YouPanel({ viewingPlayer, tokens }: YouPanelProps) {
   return (
     <aside className="you-panel">
       <h3 className="you-panel__heading">You</h3>
-      <span className="you-panel__name">{viewingPlayer.name}</span>
       <div className="you-panel__stats">
         <div className="you-panel__stat you-panel__stat--tokens">
           <span className="you-panel__stat-value">{tokens}</span>
