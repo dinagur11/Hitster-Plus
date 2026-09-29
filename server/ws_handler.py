@@ -502,23 +502,16 @@ class WsHandler:
         cards_before = list(room.current_cards)
         now = _now()
 
-        # AWAITING_PLACEMENT expiring on a NORMAL round finishes the turn
-        # (see TimelineRoom.check_timeout's docstring) rather than just
-        # advancing — carry over whatever the player had tentatively
-        # selected via place_card, if anything, so a slot pick that never
-        # got a Finish Turn click still counts.
-        pending_slot_index = pending_guessed_artist = pending_guessed_title = None
+        # AWAITING_PLACEMENT expiring on a NORMAL round drops straight into
+        # the steal window with no placement of the acting player's own —
+        # whatever they'd tentatively selected via place_card (but never
+        # locked in with finish_turn) is simply discarded, not carried over.
         acting_connection_id = None
         if phase_before == TimelinePhase.AWAITING_PLACEMENT and room.current_player_id is not None:
             acting_player = _find_player(room, room.current_player_id)
             acting_connection_id = acting_player.connection_id if acting_player else None
-            pending = self._pending_placements.get(acting_connection_id) if acting_connection_id else None
-            if pending is not None:
-                pending_slot_index = pending.slot_index
-                pending_guessed_artist = pending.guessed_artist
-                pending_guessed_title = pending.guessed_title
 
-        transitioned = room.check_timeout(now, pending_slot_index, pending_guessed_artist, pending_guessed_title)
+        transitioned = room.check_timeout(now)
         if transitioned:
             if acting_connection_id is not None:
                 self._pending_placements.pop(acting_connection_id, None)

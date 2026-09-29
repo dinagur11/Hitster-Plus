@@ -10,5 +10,5 @@ export const WS_URL = import.meta.env.VITE_WS_URL;
 export const TURN_SECONDS = 75;
 export const STEAL_WINDOW_SECONDS = 40;
 export const STEAL_WINDOW_SKIPPED_SECONDS = 7;
-export const REVEAL_SECONDS = 10;
+export const REVEAL_SECONDS = 9;
 export const MAX_HINT_SLOTS = 3;

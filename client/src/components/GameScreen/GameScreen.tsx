@@ -198,12 +198,34 @@ function VolumeControl({
       />
       <button
         type="button"
-        className="game-screen__volume-mute"
+        className={`game-screen__volume-mute${isMuted ? " game-screen__volume-mute--muted" : ""}`}
         onClick={() => onChange(isMuted ? 1 : 0)}
         aria-label={isMuted ? "Unmute" : "Mute"}
         title={isMuted ? "Unmute" : "Mute"}
       >
-        {isMuted ? "🔇" : "🔊"}
+        <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true">
+          <path
+            d="M4 10v4h4l5 4V6L8 10H4Z"
+            fill="currentColor"
+          />
+          {isMuted ? (
+            <path
+              d="M15.5 9.5l5 5m0-5l-5 5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              fill="none"
+            />
+          ) : (
+            <path
+              d="M15.8 8.8a5 5 0 0 1 0 6.4M18.3 6.3a8.5 8.5 0 0 1 0 11.4"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              fill="none"
+            />
+          )}
+        </svg>
       </button>
     </div>
   );
@@ -614,7 +636,7 @@ export function GameScreen({
         ) : (
           <section className="game-screen__timeline-area">
             <p className="game-screen__mode-hint game-screen__mode-hint--timeline">
-              Place your guess on the timeline.
+              Drag the card to a slot on the timeline to make a guess.
             </p>
             <div className="game-screen__normal-round">
               <NormalTimeline

@@ -23,7 +23,7 @@ STEAL_WINDOW_ALL_SKIPPED_DELAY_SECONDS = 5
 # (or, if this reveal was the winning one, before it stops mattering) — a
 # real, server-held deadline like turn_deadline/steal_deadline, not a
 # client-side auto-continue.
-REVEAL_SECONDS = 10
+REVEAL_SECONDS = 9
 
 # First player to reach this many cards on their own timeline wins the
 # game outright — per CLAUDE.md's settled win condition. This is the

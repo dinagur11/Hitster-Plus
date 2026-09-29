@@ -186,12 +186,27 @@
 }
 
 .game-screen__volume-mute {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  color: var(--color-brass);
+  font-size: 1.1rem;
   line-height: 1;
   padding: 0.15rem;
+  opacity: 0.75;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.game-screen__volume-mute:hover {
+  opacity: 1;
+}
+
+.game-screen__volume-mute--muted {
+  color: var(--color-amber);
+  opacity: 1;
 }
 
 .game-screen__volume-slider {

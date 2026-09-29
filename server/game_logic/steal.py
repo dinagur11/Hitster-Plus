@@ -68,17 +68,23 @@ def all_slots_attempted(attempted_slots: dict[int, str], timeline: list[Card]) -
 def evaluate_window(
     timeline: list[Card],
     year: int,
-    original_slot_index: int,
+    original_slot_index: int | None,
     steal_attempts: list[StealAttempt],
 ) -> WindowResult:
     """Evaluate the original placement and every recorded steal attempt
     together, in one pass, against `timeline` as it stood before this turn's
     card was placed.
 
+    `original_slot_index` is None when the turn timer expired before the
+    acting player ever selected a slot — there's no placement of theirs to
+    evaluate, so it's simply never correct (see TimelineRoom._expire_
+    placement_without_selection; other players can still steal into any
+    slot, including the one that would've been correct).
+
     Call this once, after STEAL_WINDOW closes — not incrementally as attempts
     arrive.
     """
-    original_correct = is_placement_correct(timeline, original_slot_index, year)
+    original_correct = original_slot_index is not None and is_placement_correct(timeline, original_slot_index, year)
     steal_outcomes = [
         SlotOutcome(
             player_id=attempt.player_id,

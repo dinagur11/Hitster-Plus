@@ -18,9 +18,12 @@
   left: 0;
   width: 5.5rem;
   height: 5.5rem;
-  border-radius: 999px;
+  border-radius: 0.75rem;
   border: 2px solid var(--color-brass);
-  background: var(--surface-3);
+  background:
+    radial-gradient(circle at center, transparent 1.05rem, color-mix(in srgb, var(--color-brass) 35%, transparent) 1.1rem, color-mix(in srgb, var(--color-brass) 35%, transparent) 1.2rem, transparent 1.25rem),
+    radial-gradient(circle at center, transparent 1.85rem, color-mix(in srgb, var(--color-brass) 20%, transparent) 1.9rem, color-mix(in srgb, var(--color-brass) 20%, transparent) 2rem, transparent 2.05rem),
+    var(--color-ink);
   padding: 0;
   display: flex;
   align-items: center;

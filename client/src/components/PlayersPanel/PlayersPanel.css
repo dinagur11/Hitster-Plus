@@ -70,20 +70,33 @@
   color: var(--text-muted);
 }
 
+.players-panel__name-sep {
+  margin: 0 0.35rem;
+  color: var(--text-faint);
+  font-weight: 400;
+  font-size: 0.7rem;
+}
+
+.players-panel__host {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-brass);
+}
+
 .players-panel__meta {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.players-panel__host {
-  font-size: 0.72rem;
-  color: var(--color-brass);
-}
-
 .players-panel__cards {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.players-panel__meta-sep {
+  color: var(--text-faint);
+  font-size: 0.7rem;
 }
 
 .players-panel__tokens {

@@ -27,8 +27,8 @@
 .steal-window__eyebrow {
   font-family: var(--font-display);
   font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--color-felt);
+  font-weight: 700;
+  color: var(--color-amber);
 }
 
 .steal-window__copy {

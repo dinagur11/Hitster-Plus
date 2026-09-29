@@ -38,12 +38,18 @@ export function PlayersPanel({ players, activePlayerId, viewingPlayerId, onKick 
                 <span className="players-panel__name">
                   {player.name}
                   {isYou && <span className="players-panel__you"> (you)</span>}
+                  {player.is_host && (
+                    <>
+                      <span className="players-panel__name-sep">•</span>
+                      <span className="players-panel__host">Host</span>
+                    </>
+                  )}
                 </span>
                 <span className="players-panel__meta">
-                  {player.is_host && <span className="players-panel__host">Host</span>}
                   <span className="players-panel__cards">
                     {player.timeline.length} {player.timeline.length === 1 ? "card" : "cards"}
                   </span>
+                  <span className="players-panel__meta-sep">|</span>
                   <span className="players-panel__tokens">
                     {player.tokens} {player.tokens === 1 ? "token" : "tokens"}
                   </span>
