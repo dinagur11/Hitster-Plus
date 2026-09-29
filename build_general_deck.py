@@ -45,8 +45,8 @@ from pathlib import Path
 import requests
 from rapidfuzz import fuzz
 
-SEED_FILE = Path(__file__).parent / "hebrew_seed.json"
-OUTPUT_FILE = Path(__file__).parent / "hebrew.json"
+SEED_FILE = Path(__file__).parent / "general_deck_seed.json"
+OUTPUT_FILE = Path(__file__).parent / "general.json"
 
 ITUNES_SEARCH_URL = "https://itunes.apple.com/search"
 # Undocumented endpoint with an undocumented rate limit — this delay is a
@@ -60,6 +60,44 @@ COMPILATION_HINTS = (
     "greatest hits", "best of", "anthology", "essential", "collection",
     "karaoke", "tribute", "made famous by", "cover version",
 )
+
+# A track's *version tag* — the parenthetical/bracketed suffix or " - "
+# trailer iTunes attaches to a non-studio-original take, e.g. "Yesterday
+# (Live at the BBC)" or "Nothing Else Matters - Acoustic". Checked only
+# against that tag text (see _version_tag_text), never the track's full
+# title/collection name — a whole-string search would false-positive on
+# titles where one of these words is just part of the real title
+# ("Live and Let Die", "Radioactive", "Remix" as a proper noun, etc.).
+NON_ORIGINAL_VERSION_HINTS = (
+    "live", "acoustic", "unplugged", "remix", "demo", "instrumental",
+    "karaoke", "a cappella", "rehearsal", "session", "alternate take",
+    "alternate version", "orchestral version", "radio session",
+)
+
+_VERSION_TAG_RE = re.compile(r"\((.*?)\)|\[(.*?)\]")
+
+
+def _version_tag_text(name: str) -> str:
+    """Every parenthetical/bracketed tag in `name`, plus anything after a
+    trailing " - " (the other common convention, e.g. "Song Title - Live"),
+    lowercased and joined — the only text NON_ORIGINAL_VERSION_HINTS is
+    ever matched against."""
+    tags = [t for pair in _VERSION_TAG_RE.findall(name) for t in pair if t]
+    if " - " in name:
+        tags.append(name.rsplit(" - ", 1)[1])
+    return " ".join(tags).lower()
+
+
+def is_non_original_version(result: dict) -> bool:
+    """Whether this result's own tag text (track name and/or collection
+    name) flags it as a live/acoustic/remix/etc. take rather than the
+    song's original studio version — exactly the kind of entry that would
+    otherwise sneak into the deck since normalize() strips parenthetical
+    tags before title/artist matching (deliberately, so "Song (Live)" still
+    matches a search for "Song" — but that means candidate *selection* has
+    to filter these back out explicitly)."""
+    combined = f"{_version_tag_text(result.get('trackName', ''))} {_version_tag_text(result.get('collectionName', ''))}"
+    return any(re.search(rf"\b{re.escape(hint)}\b", combined) for hint in NON_ORIGINAL_VERSION_HINTS)
 
 # Hebrew (֐-׿) and Alphabetic Presentation Forms (יִ-ﭏ,
 # a handful of Hebrew ligatures/presentation variants also seen in the
@@ -163,8 +201,15 @@ def pick_best_result(results: list[dict], wanted_title: str, wanted_artist: str,
     if not matching:
         return None
 
-    non_compilation = [r for r in matching if not looks_like_compilation(r)]
-    candidates = non_compilation or matching  # fall back rather than skip the song
+    # Prefer the studio original over any live/acoustic/remix/etc. take,
+    # and among those, a non-compilation release — but never skip the song
+    # over it: if every match is tagged as a non-original version (no
+    # studio release ever showed up in these results), fall back to
+    # picking among those rather than returning nothing.
+    original_version = [r for r in matching if not is_non_original_version(r)]
+    pool = original_version or matching
+    non_compilation = [r for r in pool if not looks_like_compilation(r)]
+    candidates = non_compilation or pool  # fall back rather than skip the song
 
     def release_year(r: dict) -> int:
         date_str = r.get("releaseDate", "")
@@ -215,7 +260,13 @@ def resolve_song(entry: dict) -> tuple[dict | None, str | None]:
     year = itunes_year if itunes_year is not None else entry["year"]
 
     warning = None
-    if itunes_year is None:
+    if is_non_original_version(best):
+        warning = (
+            f"only match found was tagged as a non-original version "
+            f"({_version_tag_text(best.get('trackName', '')) or _version_tag_text(best.get('collectionName', ''))!r}) "
+            f"— no studio original turned up in these results, verify manually"
+        )
+    elif itunes_year is None:
         warning = "no release date returned by iTunes — used curated seed year, verify manually"
     elif abs(itunes_year - entry["year"]) > 2:
         warning = (

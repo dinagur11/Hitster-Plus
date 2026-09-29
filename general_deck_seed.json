@@ -1,5 +1,53 @@
 [
   {
+    "title": "Sing, Sing, Sing",
+    "artist": "Benny Goodman",
+    "year": 1937,
+    "genre": "big band jazz"
+  },
+  {
+    "title": "Over the Rainbow",
+    "artist": "Judy Garland",
+    "year": 1939,
+    "genre": "traditional pop"
+  },
+  {
+    "title": "In the Mood",
+    "artist": "Glenn Miller",
+    "year": 1939,
+    "genre": "swing"
+  },
+  {
+    "title": "White Christmas",
+    "artist": "Bing Crosby",
+    "year": 1942,
+    "genre": "holiday pop"
+  },
+  {
+    "title": "La Vie en rose",
+    "artist": "Édith Piaf",
+    "year": 1947,
+    "genre": "chanson"
+  },
+  {
+    "title": "I'm So Lonesome I Could Cry",
+    "artist": "Hank Williams",
+    "year": 1949,
+    "genre": "country"
+  },
+  {
+    "title": "Unforgettable",
+    "artist": "Nat King Cole",
+    "year": 1951,
+    "genre": "vocal jazz"
+  },
+  {
+    "title": "Your Cheatin' Heart",
+    "artist": "Hank Williams",
+    "year": 1953,
+    "genre": "country"
+  },
+  {
     "title": "Rock Around the Clock",
     "artist": "Bill Haley & His Comets",
     "year": 1954,
@@ -36,6 +84,12 @@
     "genre": "traditional pop"
   },
   {
+    "title": "I Walk the Line",
+    "artist": "Johnny Cash",
+    "year": 1956,
+    "genre": "country"
+  },
+  {
     "title": "Jailhouse Rock",
     "artist": "Elvis Presley",
     "year": 1957,
@@ -44,6 +98,12 @@
   {
     "title": "That'll Be the Day",
     "artist": "Buddy Holly & The Crickets",
+    "year": 1957,
+    "genre": "rock and roll"
+  },
+  {
+    "title": "Great Balls of Fire",
+    "artist": "Jerry Lee Lewis",
     "year": 1957,
     "genre": "rock and roll"
   },
@@ -72,10 +132,28 @@
     "genre": "traditional pop"
   },
   {
+    "title": "I Only Have Eyes for You",
+    "artist": "The Flamingos",
+    "year": 1959,
+    "genre": "doo-wop"
+  },
+  {
     "title": "It's Now or Never",
     "artist": "Elvis Presley",
     "year": 1960,
     "genre": "pop"
+  },
+  {
+    "title": "At Last",
+    "artist": "Etta James",
+    "year": 1960,
+    "genre": "soul"
+  },
+  {
+    "title": "Crying",
+    "artist": "Roy Orbison",
+    "year": 1961,
+    "genre": "country pop"
   },
   {
     "title": "Stand by Me",
@@ -96,10 +174,22 @@
     "genre": "pop"
   },
   {
+    "title": "The Loco-Motion",
+    "artist": "Little Eva",
+    "year": 1962,
+    "genre": "pop"
+  },
+  {
     "title": "Ring of Fire",
     "artist": "Johnny Cash",
     "year": 1963,
     "genre": "country"
+  },
+  {
+    "title": "Be My Baby",
+    "artist": "The Ronettes",
+    "year": 1963,
+    "genre": "pop"
   },
   {
     "title": "House of the Rising Sun",
@@ -126,6 +216,7 @@
     "genre": "folk rock"
   },
   {
+    "(I Can't Get No) Satisfaction": "The Rolling Stones",
     "title": "(I Can't Get No) Satisfaction",
     "artist": "The Rolling Stones",
     "year": 1965,
@@ -192,6 +283,12 @@
     "genre": "soul"
   },
   {
+    "title": "Dream a Little Dream of Me",
+    "artist": "The Mamas & the Papas",
+    "year": 1968,
+    "genre": "traditional pop"
+  },
+  {
     "title": "My Way",
     "artist": "Frank Sinatra",
     "year": 1969,
@@ -202,6 +299,12 @@
     "artist": "Creedence Clearwater Revival",
     "year": 1969,
     "genre": "rock"
+  },
+  {
+    "title": "Space Oddity",
+    "artist": "David Bowie",
+    "year": 1969,
+    "genre": "glam rock"
   },
   {
     "title": "Let It Be",
@@ -216,6 +319,12 @@
     "genre": "metal"
   },
   {
+    "title": "Bridge over Troubled Water",
+    "artist": "Simon & Garfunkel",
+    "year": 1970,
+    "genre": "folk rock"
+  },
+  {
     "title": "Stairway to Heaven",
     "artist": "Led Zeppelin",
     "year": 1971,
@@ -226,6 +335,12 @@
     "artist": "Marvin Gaye",
     "year": 1971,
     "genre": "soul"
+  },
+  {
+    "title": "Imagine",
+    "artist": "John Lennon",
+    "year": 1971,
+    "genre": "rock"
   },
   {
     "title": "Dancing in the Moonlight",
@@ -286,6 +401,12 @@
     "artist": "Bob Marley & The Wailers",
     "year": 1975,
     "genre": "reggae"
+  },
+  {
+    "title": "Wish You Were Here",
+    "artist": "Pink Floyd",
+    "year": 1975,
+    "genre": "progressive rock"
   },
   {
     "title": "Dancing Queen",
@@ -354,6 +475,12 @@
     "genre": "progressive rock"
   },
   {
+    "title": "London Calling",
+    "artist": "The Clash",
+    "year": 1979,
+    "genre": "punk"
+  },
+  {
     "title": "Celebration",
     "artist": "Kool & the Gang",
     "year": 1980,
@@ -364,6 +491,12 @@
     "artist": "Talking Heads",
     "year": 1980,
     "genre": "new wave"
+  },
+  {
+    "title": "Back in Black",
+    "artist": "AC/DC",
+    "year": 1980,
+    "genre": "hard rock"
   },
   {
     "title": "Don't Stop Believin'",
@@ -378,6 +511,12 @@
     "genre": "synth-pop"
   },
   {
+    "title": "In the Air Tonight",
+    "artist": "Phil Collins",
+    "year": 1981,
+    "genre": "rock"
+  },
+  {
     "title": "Africa",
     "artist": "Toto",
     "year": 1982,
@@ -388,6 +527,12 @@
     "artist": "Michael Jackson",
     "year": 1982,
     "genre": "pop"
+  },
+  {
+    "title": "Eye of the Tiger",
+    "artist": "Survivor",
+    "year": 1982,
+    "genre": "hard rock"
   },
   {
     "title": "Sweet Dreams (Are Made of This)",
@@ -422,6 +567,12 @@
   {
     "title": "Purple Rain",
     "artist": "Prince",
+    "year": 1984,
+    "genre": "pop"
+  },
+  {
+    "title": "Careless Whisper",
+    "artist": "George Michael",
     "year": 1984,
     "genre": "pop"
   },
@@ -492,10 +643,22 @@
     "genre": "folk pop"
   },
   {
+    "title": "Never Gonna Give You Up",
+    "artist": "Rick Astley",
+    "year": 1988,
+    "genre": "dance pop"
+  },
+  {
     "title": "Like a Prayer",
     "artist": "Madonna",
     "year": 1989,
     "genre": "pop"
+  },
+  {
+    "title": "Free Fallin'",
+    "artist": "Tom Petty",
+    "year": 1989,
+    "genre": "heartland rock"
   },
   {
     "title": "Enjoy the Silence",
@@ -508,6 +671,12 @@
     "artist": "Sinead O'Connor",
     "year": 1990,
     "genre": "pop"
+  },
+  {
+    "title": "U Can't Touch This",
+    "artist": "MC Hammer",
+    "year": 1990,
+    "genre": "hip hop"
   },
   {
     "title": "Nothing Else Matters",
@@ -564,6 +733,12 @@
     "genre": "rock"
   },
   {
+    "title": "All That She Wants",
+    "artist": "Ace of Base",
+    "year": 1993,
+    "genre": "europop"
+  },
+  {
     "title": "Zombie",
     "artist": "The Cranberries",
     "year": 1994,
@@ -574,6 +749,12 @@
     "artist": "The Notorious B.I.G.",
     "year": 1994,
     "genre": "hip hop"
+  },
+  {
+    "title": "Basket Case",
+    "artist": "Green Day",
+    "year": 1994,
+    "genre": "punk rock"
   },
   {
     "title": "You Oughta Know",
@@ -636,6 +817,12 @@
     "genre": "country"
   },
   {
+    "title": "Bitter Sweet Symphony",
+    "artist": "The Verve",
+    "year": 1997,
+    "genre": "britpop"
+  },
+  {
     "title": "Believe",
     "artist": "Cher",
     "year": 1998,
@@ -646,6 +833,12 @@
     "artist": "Britney Spears",
     "year": 1998,
     "genre": "pop"
+  },
+  {
+    "title": "Iris",
+    "artist": "Goo Goo Dolls",
+    "year": 1998,
+    "genre": "alternative rock"
   },
   {
     "title": "Livin' la Vida Loca",
@@ -684,6 +877,12 @@
     "genre": "pop"
   },
   {
+    "title": "It's My Life",
+    "artist": "Bon Jovi",
+    "year": 2000,
+    "genre": "rock"
+  },
+  {
     "title": "Murder on the Dancefloor",
     "artist": "Sophie Ellis-Bextor",
     "year": 2001,
@@ -694,6 +893,12 @@
     "artist": "Alicia Keys",
     "year": 2001,
     "genre": "r&b"
+  },
+  {
+    "title": "Chop Suey!",
+    "artist": "System of a Down",
+    "year": 2001,
+    "genre": "nu metal"
   },
   {
     "title": "Complicated",
@@ -756,10 +961,22 @@
     "genre": "indie rock"
   },
   {
+    "title": "Mr. Brightside",
+    "artist": "The Killers",
+    "year": 2004,
+    "genre": "indie rock"
+  },
+  {
     "title": "Gold Digger",
     "artist": "Kanye West",
     "year": 2005,
     "genre": "hip hop"
+  },
+  {
+    "title": "Feel Good Inc.",
+    "artist": "Gorillaz",
+    "year": 2005,
+    "genre": "alternative hip hop"
   },
   {
     "title": "Hips Don't Lie",
@@ -798,6 +1015,12 @@
     "genre": "hip hop"
   },
   {
+    "title": "Bleeding Love",
+    "artist": "Leona Lewis",
+    "year": 2007,
+    "genre": "pop"
+  },
+  {
     "title": "Poker Face",
     "artist": "Lady Gaga",
     "year": 2008,
@@ -830,6 +1053,12 @@
   {
     "title": "I Gotta Feeling",
     "artist": "The Black Eyed Peas",
+    "year": 2009,
+    "genre": "dance pop"
+  },
+  {
+    "title": "Bad Romance",
+    "artist": "Lady Gaga",
     "year": 2009,
     "genre": "dance pop"
   },
@@ -954,6 +1183,12 @@
     "genre": "pop"
   },
   {
+    "title": "Hotline Bling",
+    "artist": "Drake",
+    "year": 2015,
+    "genre": "hip hop"
+  },
+  {
     "title": "Closer",
     "artist": "The Chainsmokers",
     "year": 2016,
@@ -964,6 +1199,12 @@
     "artist": "Justin Timberlake",
     "year": 2016,
     "genre": "pop"
+  },
+  {
+    "title": "Starboy",
+    "artist": "The Weeknd",
+    "year": 2016,
+    "genre": "r&b"
   },
   {
     "title": "Havana",
@@ -1072,6 +1313,12 @@
     "artist": "Olivia Rodrigo",
     "year": 2021,
     "genre": "pop"
+  },
+  {
+    "title": "Stay",
+    "artist": "The Kid LAROI & Justin Bieber",
+    "year": 2021,
+    "genre": "pop rock"
   },
   {
     "title": "Calm Down",

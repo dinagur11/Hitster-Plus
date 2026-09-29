@@ -267,6 +267,26 @@ def test_skip_steal_by_all_eligible_players_shortens_deadline():
     assert room.phase == TimelinePhase.AWAITING_PLACEMENT
 
 
+def test_skip_steal_never_extends_deadline_if_less_time_was_left():
+    """Unlike the all-attempted case, deciding via skip should never hand
+    the window a fresh, longer runway — only ever bring the deadline
+    closer. If less time than ALL_SKIPPED_DELAY was already left, that
+    little time left stands."""
+    p1 = Player(player_id="p1", name="Alice", timeline=[make_card(1990, 1)])
+    p2 = Player(player_id="p2", name="Bob", tokens=3)
+    room = make_in_progress_room([p1, p2], deck=[make_card(1980, 99)], current_cards=[make_card(2000, 2)])
+    room.finish_turn("p1", slot_index=0, now=NOW)
+
+    # Only 1s left on the original window when the last eligible player skips.
+    late = NOW + timedelta(seconds=STEAL_WINDOW_SECONDS - 1)
+    room.skip_steal("p2", now=late)
+
+    # The original deadline (1s away) is already sooner than
+    # late + ALL_SKIPPED_DELAY_SECONDS would be — it's left untouched
+    # rather than being pushed further out.
+    assert room.steal_deadline == NOW + timedelta(seconds=STEAL_WINDOW_SECONDS)
+
+
 def test_mixed_skip_and_attempt_by_all_eligible_players_shortens_deadline():
     """Once every eligible player has decided one way or another — skip OR
     a confirmed steal attempt — there's nothing left to wait on, even if

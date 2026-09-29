@@ -471,16 +471,14 @@ class TimelineRoom(GameRoom):
 
     def _maybe_shorten_steal_window(self, now: datetime) -> None:
         """Shorten the steal window's deadline once there's nothing left
-        worth waiting the full window out for — set (not add — this always
-        lands at exactly now+delay, whether that shortens or lengthens
-        whatever was left) a fresh, shorter deadline. The normal timeout
-        machinery (check_timeout, driven by ws_handler's deadline watcher)
-        picks this up and reveals once it passes — nothing closes
-        synchronously here.
+        worth waiting the full window out for. The normal timeout machinery
+        (check_timeout, driven by ws_handler's deadline watcher) picks this
+        up and reveals once it passes — nothing closes synchronously here.
 
         Two cases:
         - Every valid slot has been attempted (right or wrong — correctness
-          isn't checked yet): holds a beat longer (ALL_ATTEMPTED_DELAY) so
+          isn't checked yet): always sets a fresh full ALL_ATTEMPTED_DELAY
+          beat (extending the deadline if less time than that was left) so
           everyone actually gets to see who claimed which slot before the
           reveal, rather than the window vanishing the instant the last
           attempt lands.
@@ -490,7 +488,11 @@ class TimelineRoom(GameRoom):
           wait out the rest of the timer either. Same ALL_ATTEMPTED_DELAY
           beat if there's at least one attempt badge worth seeing;
           otherwise (a pure all-skipped window) the shorter
-          ALL_SKIPPED_DELAY, since there's nothing to look at.
+          ALL_SKIPPED_DELAY, since there's nothing to look at. Unlike the
+          all-attempted case above, this only ever brings the deadline
+          closer (min() against the candidate), never extends it — a skip
+          or attempt landing with little time left shouldn't hand the
+          window a fresh, longer runway just because everyone's decided.
         """
         acting_player = self._current_player()
         if all_slots_attempted(self.attempted_slots, acting_player.timeline):
@@ -499,7 +501,9 @@ class TimelineRoom(GameRoom):
 
         if self.eligible_stealer_ids and self.eligible_stealer_ids <= self._decided_stealer_ids():
             delay = STEAL_WINDOW_ALL_ATTEMPTED_DELAY_SECONDS if self.steal_attempts else STEAL_WINDOW_ALL_SKIPPED_DELAY_SECONDS
-            self.steal_deadline = turn_manager.compute_deadline(now, delay)
+            candidate = turn_manager.compute_deadline(now, delay)
+            if self.steal_deadline is None or candidate < self.steal_deadline:
+                self.steal_deadline = candidate
 
     def _close_steal_window_and_reveal(self, now: datetime) -> None:
         acting_player = self._current_player()
