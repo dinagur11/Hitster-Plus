@@ -49,7 +49,7 @@ export function PlayersPanel({ players, activePlayerId, viewingPlayerId, onKick 
                   <span className="players-panel__cards">
                     {player.timeline.length} {player.timeline.length === 1 ? "card" : "cards"}
                   </span>
-                  <span className="players-panel__meta-sep">|</span>
+                  <span className="players-panel__meta-sep">•</span>
                   <span className="players-panel__tokens">
                     {player.tokens} {player.tokens === 1 ? "token" : "tokens"}
                   </span>

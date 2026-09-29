@@ -5,12 +5,20 @@
    an implementation detail, not a new palette. */
 
 :root {
-  --color-ink: #1b1712;
-  --color-paper: #ede3cf;
-  --color-walnut: #5c3d26;
-  --color-brass: #b08d57;
-  --color-amber: #e8a33d;
-  --color-felt: #2f4a3d;
+  /* Slightly brighter than CLAUDE.md's original six — same hues, a touch
+     more lift so the palette doesn't read as murky, still the warm/walnut
+     dark-surface retro-radio mood, not a flat/neutral one. */
+  --color-ink: #221d16;
+  --color-paper: #f2e9d8;
+  --color-walnut: #6b4a30;
+  --color-brass: #c19c66;
+  --color-amber: #f0ac46;
+  --color-felt: #375a49;
+
+  /* Secondary accent — a lighter, dustier gold than brass/amber, reserved
+     for secondary titles/subheadings (text that supports a primary amber
+     heading rather than competing with it). */
+  --color-sand: #d8b98a;
 
   --surface-0: var(--color-ink);
   --surface-1: color-mix(in srgb, var(--color-ink) 88%, var(--color-walnut) 12%);

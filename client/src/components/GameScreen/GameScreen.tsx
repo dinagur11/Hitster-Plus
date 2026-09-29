@@ -527,10 +527,11 @@ export function GameScreen({
               <div className="game-screen__guess-column">
                 <div className="game-screen__guess-panel">
                   <h3 className="game-screen__guess-heading">
-                    {isActingPlayer
-                      ? "Guess title & artist for a bonus token"
-                      : `${actingPlayer.name} is guessing title & artist`}
+                    {isActingPlayer ? "Optional: Guess title & artist" : `${actingPlayer.name} is guessing title & artist`}
                   </h3>
+                  {isActingPlayer && (
+                    <p className="game-screen__guess-subheading">Getting both right will earn you a token</p>
+                  )}
                   <input
                     type="text"
                     dir="auto"

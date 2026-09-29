@@ -251,6 +251,12 @@
   white-space: nowrap;
 }
 
+.game-screen__guess-subheading {
+  margin: -0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-sand);
+}
+
 .game-screen__guess-input {
   background: var(--surface-well);
   border: 1px solid var(--border-subtle);
