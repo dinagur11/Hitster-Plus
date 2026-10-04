@@ -90,6 +90,7 @@ export function LiveGameFlow({ send, subscribe, viewingPlayerId, onLeaveGame, in
 
   const snapshotRef = useRef<{ actingPlayerId: string; actingPlayerTimeline: Card[] } | null>(null);
   const turnKeyRef = useRef<string | null>(null);
+  const currentCardIdRef = useRef<number | null>(null);
 
   // Factored out so the mount-seeding effect below and the live
   // subscription can share identical logic — the seed message is handled
@@ -106,6 +107,15 @@ export function LiveGameFlow({ send, subscribe, viewingPlayerId, onLeaveGame, in
     // or button: this state_update arriving *is* the trigger.
     if (message.reveal_deadline === null) {
       setRevealPayload((prev) => (prev === null ? prev : null));
+    }
+
+    // A track switch swaps the card mid-turn (the turn key doesn't change).
+    // The server drops the hints granted for the discarded card, so the
+    // grayed-out slots shown here must go too.
+    const cardId = message.current_cards[0]?.deezer_id ?? null;
+    if (cardId !== currentCardIdRef.current) {
+      currentCardIdRef.current = cardId;
+      setHintGrayedSlots([]);
     }
 
     if (message.phase === "awaiting_placement" && message.current_player_id !== null) {

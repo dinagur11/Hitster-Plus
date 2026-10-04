@@ -5,8 +5,8 @@
 A browser-based multiplayer clone of the physical game Hitster (guess a song's
 release year and place it on a shared timeline), built as a portfolio project.
 Python backend (asyncio + websockets), React frontend. Original mechanics plus
-custom additions: token economy, steal mechanic, hint system, and a "mashup"
-bonus round.
+custom additions: token economy, steal mechanic, hint system, a "mashup"
+bonus round, and a solo daily-challenge mode (play alone, no room code).
 
 ## Tech stack
 
@@ -15,23 +15,33 @@ bonus round.
   the WebSocket game connection — not needed for v1.
 - **Client:** React (Vite) + plain CSS (or CSS modules) — no CSS-in-JS
   framework, no Canvas. Timeline and cards render as styled DOM elements.
-- **Track data/audio:** Deezer's public preview API (30s clips + metadata:
-  title, artist, release date, album art). Do **not** use Spotify's
-  `preview_url` — it's deprecated and returns null for API clients as of
-  late 2024/2026. No self-hosted audio, no licensing cost.
+- **Track data/audio:** the iTunes Search API (free, no key; 30s preview clips
+  + metadata: title, artist, release year, album art). Decks are built
+  offline by `build_general_deck.py`, which resolves a curated `*_seed.json`
+  into the playable `general.json` / `rock.json` / `pop.json`; the server
+  only ever reads those static files. Do **not** use Spotify's `preview_url`
+  — it's deprecated and returns null for API clients as of late 2024/2026.
+  No self-hosted audio, no licensing cost. (`Card.deezer_id` is a leftover
+  name from the originally planned Deezer source; it actually holds the
+  iTunes track id. Renaming it is a separate, not-yet-requested change.)
 - **State storage:** in-memory only for v1. A single Python process holds
   `dict[room_id, GameRoom]`. No database, no Redis. Do not add persistence
   infrastructure unless explicitly asked — it's out of scope for v1.
 
 ## Architecture
 
-Two independent game types, not variants of one state machine:
+Two independent room types, both subclasses of the pure-data `GameRoom`, not
+variants of one state machine:
 
-- **Timeline game** (`TimelineRoom`) — the main game: turns, timelines, tokens,
-  steal mechanic, mashup rounds.
-- **Buzzer game** (`BuzzerRoom`) — separate, simpler mode (guess-the-artist,
-  first-to-answer). Shares only the `Card` model and connection plumbing with
-  `TimelineRoom`. Do not merge these into one state machine.
+- **Multiplayer** (`TimelineRoom`) — the main game: turns, timelines, tokens,
+  steal mechanic, mashup rounds. Created and tracked by `RoomManager`.
+- **Solo** (`SoloRoom`) — the daily challenge: one player, no turn order, no
+  steal window, no mashup rounds; strikes and a 15-correct win. Has its own
+  phase enum (`SoloPhase`) and its own handler (`solo_handler.py`); it is not
+  stored in `RoomManager`. Shares only the `Card`/`Player` models, the
+  `game_logic` functions (`placement`, `hints`, `guess_matching`) and the
+  websocket plumbing with `TimelineRoom`. Do not merge the two into one
+  state machine or add solo flags to `TimelineRoom`.
 
 Server is authoritative for all game state. Clients never compute correctness,
 never compute which timeline slots are valid/invalid (that would leak
@@ -43,27 +53,34 @@ rather than deriving state locally.
 ```
 server/
   main.py                # thin entrypoint: starts websockets.serve() loop
-  config.py              # timer lengths, steal window, hint costs, etc.
+  config.py              # timer lengths, token costs, win lengths, solo constants
   models/                # Card, Player, GameRoom, enums — pure data, no rule logic
+    enums.py              # RoomLifecycle, TimelinePhase, SoloPhase, SoloResult, RoundType
   rooms/
-    room_manager.py       # dict[room_id, GameRoom], create/join/cleanup
-    timeline_room.py       # main game state machine
-    buzzer_room.py         # buzzer mode state machine
+    room_manager.py       # dict[room_id, TimelineRoom], create/join/cleanup
+    timeline_room.py       # multiplayer state machine
+    solo_room.py            # solo daily-challenge state machine
+    errors.py                # IllegalActionError and friends
   protocol/
-    incoming.py            # parse/validate client→server JSON (Pydantic)
-    outgoing.py             # build server→client JSON
+    incoming.py            # parse/validate client→server JSON (Pydantic), incl. solo_* messages
+    outgoing.py             # build server→client JSON for multiplayer rooms
+    solo_outgoing.py         # build server→client JSON for solo runs
   deck/
-    loader.py               # loads theme JSON into list[Card]
-    track_provider.py       # Deezer API calls (search, preview, art, year)
+    loader.py               # loads a theme's deck (general/rock/pop) into list[Card]
   game_logic/
     placement.py            # timeline correctness checks
     steal.py                 # per-slot steal contention/locking
-    hints.py                  # hint tokens → grayed-out slot computation
+    hints.py                  # hint slot computation → grayed-out slots
     mashup.py                  # mashup round scoring (±10yr check)
     turn_manager.py             # round type decisions, turn advance, timers
     guess_matching.py           # fuzzy artist/title guess matching (rapidfuzz)
-  ws_handler.py                 # per-connection recv loop, dispatch to rooms
-tests/
+    daily.py                      # deterministic daily deck order + start/queue/reserve split
+  ws_handler.py                 # per-connection recv loop, dispatch to multiplayer rooms
+  solo_handler.py                # solo sessions per connection + their deadline timers
+client/                          # React (Vite) app; src/components/, src/wire/
+tests/                           # pytest; game_logic and rooms tested without websockets
+general.json rock.json pop.json  # playable decks (repo root), built by build_general_deck.py
+general_deck_seed.json ...       # curated seeds the build script resolves via iTunes
 ```
 
 Rule of thumb: `models/` never contains game-rule logic; `game_logic/`
@@ -101,12 +118,13 @@ slot is attempted (right or wrong), it's locked for the rest of that window.
 Different players may attempt different slots simultaneously. Stealing costs
 a token.
 
-**Hints:** Spend 1–3 tokens to gray out 1–3 incorrect timeline slots
-(server-computed only — never let the client determine which slots are
-wrong). Only usable during `AWAITING_PLACEMENT`, before `finish_turn` locks
-placement in; one hint request per turn (spend 1/2/3 tokens in a single
-action, no incremental top-ups); only offered during `NORMAL` rounds, not
-`MASHUP` (no discrete slot set to gray out there).
+**Hints:** Each hint request spends `HINT_TOKEN_COST_PER_SLOT` (1) token and
+grays out one more incorrect timeline slot (server-computed only — never let
+the client determine which slots are wrong). Repeatable, up to
+`MAX_HINT_SLOTS` (3) per turn, fewer if fewer incorrect slots exist (the
+correct slot can never be grayed). Only usable during `AWAITING_PLACEMENT`,
+before `finish_turn` locks placement in; only offered during `NORMAL`
+rounds, not `MASHUP` (no discrete slot set to gray out there).
 
 **Track switch:** Spend 1 token to discard the current song and draw a
 replacement, once per turn. Normal rounds only (not usable during a mashup
@@ -125,15 +143,62 @@ relative ordering) — within ±10 years of the real year = card kept; an exact
 year guess additionally earns a bonus token. No steal mechanic on this round.
 All artist/title/year info is revealed at the end regardless of outcome.
 
-**Disconnection handling:** No special pause/grace logic mid-turn — the
+**Solo daily challenge (`SoloRoom`):** a single player can start a run from
+the home screen with no room code. Settled rules:
+
+- Start: the player begins with one revealed card on their timeline (same as
+  the multiplayer starting card). Starting tokens are 0, same as multiplayer.
+- Loop: hear a song, place it into a slot (slot-snapping `NormalTimeline`,
+  `game_logic/placement.py`), optionally guess artist/title, click Finish
+  Turn, reveal. Re-dragging is client-local; one `solo_finish_turn` message
+  carries the slot and guess.
+- Correct placement: the card joins the timeline. Incorrect placement: the
+  card is discarded and the player gets a **strike**. Turn timeout
+  (`TURN_SECONDS`) counts as an incorrect placement, so it is also a strike.
+- Win: 15 correct placements (`SOLO_WIN_CORRECT`; the starting card does not
+  count). Lose: the 3rd strike (`SOLO_MAX_STRIKES`) ends the run immediately.
+  The final reveal still plays before the end screen.
+- Guess bonus: identical to multiplayer (`guess_matching`, `GUESS_BONUS_TOKENS`),
+  independent of placement correctness.
+- Tokens are only spent on hint (same rules and cost as multiplayer) and
+  switch track (`SWITCH_TRACK_TOKEN_COST`, once per turn, resets the timer,
+  clears that turn's grayed slots; draws the next card from the reserve pool).
+  No steal window, no steal phases/messages, no mashup rounds.
+- Disconnecting forfeits the run: no reconnect token, no grace period.
+- Server is authoritative and never sends the main queue, the reserve pool, or
+  the current card's title/artist/year/art before its reveal (only a redacted
+  card). `solo_state.switch_available` is a boolean, not the pool.
+
+*Daily seed (implement exactly this way):* the **server** decides the date —
+the current UTC date as `"YYYY-MM-DD"`, captured once when the session is
+created (a run crossing midnight UTC keeps its original date). The deck
+(`general` theme) is ordered by `game_logic/daily.py`'s pure
+`daily_order(cards, date, theme)`: sort cards by
+`sha256(f"{date}:{theme}:{track_id}")` hex digest, where `track_id` is
+`str(card.deezer_id)`. No `random`, no `hash()`. The ordered list splits into:
+index 0 = starting card; indices 1..17 = main queue (15 to win + up to 2
+non-final strikes = at most 17 placements, so every run fits); the rest =
+reserve pool, consumed in order by switch-track and never shifting the queue.
+A deck too small for start + queue + `SOLO_MIN_RESERVE_CARDS` is refused with a
+clear error.
+
+*Persistence:* one daily attempt per browser per date, in `localStorage`
+(`wire/soloStorage.ts`), keyed by the date string the **server** sent, never
+the client's clock. The attempt is recorded when the run starts, so forfeiting
+(closing the tab) still uses it. Once used, the home screen's "Daily
+challenge" button is disabled. There is no practice mode and no streak. No
+server persistence, consistent with the no-DB rule.
+
+**Disconnection handling (multiplayer):** No special pause/grace logic mid-turn — the
 existing 75s timer already absorbs brief drops; if it expires before
 reconnect, resolve as a failed/skipped turn as normal. Outside of turns, use
 a grace period (~60s) before removing a disconnected player. If **all**
 players in a room disconnect, garbage-collect the room immediately — no grace
 period at the room level.
 
-**Deck:** JSON files per theme (`deck/themes/*.json`), loaded into
-`list[Card]`. Custom/user-uploaded decks are a later feature, not v1.
+**Deck:** static JSON files per theme (`general.json`, `rock.json`,
+`pop.json` at the repo root), loaded by `deck/loader.py` into `list[Card]`.
+Custom/user-uploaded decks are a later feature, not v1.
 
 **Storage — deliberately not AWS yet.** v1 has no database and no AWS
 dependency: track data is static per-theme JSON files, checked into the

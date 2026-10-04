@@ -130,6 +130,47 @@ class MashupPreviewMessage(BaseModel):
     guessed_year: int
 
 
+class SoloTodayMessage(BaseModel):
+    """No fields: asks the server for today's UTC date ("YYYY-MM-DD") so the
+    home screen can tell whether this browser already played today's daily
+    challenge — the client never uses its own clock for that."""
+
+    type: Literal["solo_today"] = "solo_today"
+
+
+class SoloStartMessage(BaseModel):
+    """No fields: starts a solo daily-challenge run for this connection.
+    The server picks the date (current UTC date) and the deck order."""
+
+    type: Literal["solo_start"] = "solo_start"
+
+
+class SoloFinishTurnMessage(BaseModel):
+    """Locks in the solo placement. Carries the slot and guess itself —
+    unlike the multiplayer place_card/finish_turn pair there are no
+    spectators to preview a tentative drag to, so re-dragging stays
+    client-local until this is sent."""
+
+    type: Literal["solo_finish_turn"] = "solo_finish_turn"
+    slot_index: int = Field(ge=0)
+    guessed_artist: str | None = None
+    guessed_title: str | None = None
+
+
+class SoloUseHintMessage(BaseModel):
+    type: Literal["solo_use_hint"] = "solo_use_hint"
+
+
+class SoloSwitchTrackMessage(BaseModel):
+    type: Literal["solo_switch_track"] = "solo_switch_track"
+
+
+class SoloLeaveMessage(BaseModel):
+    """No fields: abandon the current solo run (the connection stays open)."""
+
+    type: Literal["solo_leave"] = "solo_leave"
+
+
 IncomingMessage = Annotated[
     Union[
         ListThemesMessage,
@@ -147,6 +188,12 @@ IncomingMessage = Annotated[
         SwitchTrackMessage,
         MashupPlacementMessage,
         MashupPreviewMessage,
+        SoloTodayMessage,
+        SoloStartMessage,
+        SoloFinishTurnMessage,
+        SoloUseHintMessage,
+        SoloSwitchTrackMessage,
+        SoloLeaveMessage,
     ],
     Field(discriminator="type"),
 ]

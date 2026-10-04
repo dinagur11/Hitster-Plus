@@ -90,3 +90,78 @@
     transform: translateY(-1.6rem) scale(1);
   }
 }
+
+/* Solo mode only: three strike indicators that fill in as strikes land. */
+.you-panel__strikes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--surface-well);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.you-panel__strike-row {
+  position: relative;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.you-panel__strike {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: transparent;
+}
+
+.you-panel__strike--filled {
+  background: #a8402f;
+  border-color: #a8402f;
+}
+
+.you-panel__strike--just-filled {
+  animation: you-panel-strike-fill 1.2s ease-out;
+}
+
+.you-panel__strike-popup {
+  position: absolute;
+  top: -0.2rem;
+  right: 0;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a8402f;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: you-panel-token-delta 1.2s ease-out forwards;
+}
+
+@keyframes you-panel-strike-fill {
+  0% {
+    transform: scale(0.4);
+    box-shadow: 0 0 0 0 rgba(168, 64, 47, 0.8);
+  }
+  35% {
+    transform: scale(1.6);
+    box-shadow: 0 0 0 0.45rem rgba(168, 64, 47, 0);
+  }
+  60% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(168, 64, 47, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .you-panel__strike--just-filled {
+    animation: none;
+  }
+
+  .you-panel__strike-popup {
+    animation: none;
+  }
+}

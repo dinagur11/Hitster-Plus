@@ -7,7 +7,9 @@ import { LobbyScreen } from "../components/LobbyScreen/LobbyScreen";
 import type { LobbyRoomView } from "../types";
 import { WS_URL } from "./config";
 import { LiveGameFlow } from "./LiveGameFlow";
+import { LiveSoloFlow } from "./LiveSoloFlow";
 import type { IncomingMessage, StateUpdateMessage } from "./messages";
+import { hasAttemptedDaily } from "./soloStorage";
 import { useGameSocket } from "./useGameSocket";
 
 function toLobbyView(message: StateUpdateMessage): LobbyRoomView {
@@ -18,7 +20,7 @@ function toLobbyView(message: StateUpdateMessage): LobbyRoomView {
   };
 }
 
-type Screen = "home" | "create" | "join" | "lobby" | "started" | "how-to-play";
+type Screen = "home" | "create" | "join" | "lobby" | "started" | "how-to-play" | "solo";
 
 /**
  * Home/create/join/roster/start_game wired to the real server. Once
@@ -55,6 +57,10 @@ export function LiveLobbyFlow() {
   // message is already consumed), and no further state_update necessarily
   // follows soon enough to unstick it otherwise.
   const [gameStartMessage, setGameStartMessage] = useState<StateUpdateMessage | null>(null);
+  // The server's current UTC date, from a solo_today reply — null until it
+  // lands. The home screen compares it against this browser's daily record
+  // to disable the Daily challenge button; the client's own clock is never used.
+  const [serverDate, setServerDate] = useState<string | null>(null);
 
   useEffect(() => {
     return subscribe((message: IncomingMessage) => {
@@ -105,6 +111,9 @@ export function LiveLobbyFlow() {
           break;
         case "themes":
           setAvailableThemes(message.themes);
+          break;
+        case "solo_today":
+          setServerDate(message.date);
           break;
         default:
           break;
@@ -160,6 +169,31 @@ export function LiveLobbyFlow() {
       send({ type: "list_themes" });
     }
   }, [screen, status, send]);
+
+  // Home asks the server for today's date whenever it's showing with an
+  // open socket (re-fires after returning from a run, since leaving keeps
+  // the socket open but changes `screen`). If a deliberate disconnect left
+  // the socket down (see handleGoHome), reconnect so the check can happen.
+  useEffect(() => {
+    if (screen !== "home") return;
+    if (status === "open") send({ type: "solo_today" });
+    // getStatus() rather than the `status` closure: on first mount the
+    // socket has just been told to connect but this render's `status` is stale.
+    else if (socket?.getStatus() === "disconnected") socket.connect();
+  }, [screen, status, send, socket]);
+
+  const handleEnterDaily = () => {
+    ensureConnected();
+    setKickedNotice(null);
+    setScreen("solo");
+  };
+
+  // Leaving a solo run: tell the server to drop it, but keep the socket
+  // open (unlike handleGoHome) so the home screen can re-check the date.
+  const handleLeaveSolo = () => {
+    send({ type: "solo_leave" });
+    setScreen("home");
+  };
 
   const handleEnterJoin = () => {
     ensureConnected();
@@ -233,6 +267,10 @@ export function LiveLobbyFlow() {
     );
   }
 
+  if (screen === "solo") {
+    return <LiveSoloFlow send={send} subscribe={subscribe} status={status} onExit={handleLeaveSolo} />;
+  }
+
   if (screen === "how-to-play") {
     return <HowToPlayScreen onBack={() => setScreen("home")} />;
   }
@@ -257,7 +295,13 @@ export function LiveLobbyFlow() {
       {kickedNotice && (
         <p style={{ padding: "0.5rem 1rem", textAlign: "center", color: "var(--color-amber)" }}>{kickedNotice}</p>
       )}
-      <HomeScreen onCreateGame={handleEnterCreate} onJoinLobby={handleEnterJoin} onHowToPlay={handleEnterHowToPlay} />
+      <HomeScreen
+        onCreateGame={handleEnterCreate}
+        onDailyChallenge={handleEnterDaily}
+        dailyPlayed={hasAttemptedDaily(serverDate)}
+        onJoinLobby={handleEnterJoin}
+        onHowToPlay={handleEnterHowToPlay}
+      />
     </div>
   );
 }

@@ -50,6 +50,14 @@ const SECTIONS: Section[] = [
       "Guess the song's exact release year: within 10 years keeps the card, and an exact guess also earns a bonus token. There's no steal window on a Dial Round.",
     ],
   },
+  {
+    heading: "Daily challenge",
+    body: [
+      "Want to play alone? The Daily challenge needs no room code and no other players. Everyone gets the same songs in the same order each day (UTC), and you get one attempt per day.",
+      "Place each song on your timeline as usual. A wrong placement, or running out of time, costs a strike. Get 15 correct to win; the third strike ends your run.",
+      "Guessing the artist and title earns tokens, which you can spend on a hint or a track switch. There's no steal window and no Dial Round in the Daily challenge.",
+    ],
+  },
 ];
 
 /**

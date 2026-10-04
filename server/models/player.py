@@ -1,9 +1,8 @@
 """Player model.
 
-Timeline-game state (tokens, timeline, mashup usage) lives directly on
-Player rather than a Timeline-specific subclass, per project decision.
-BuzzerRoom doesn't use these fields; it tracks its own per-player score
-separately in its own room state.
+Per-game state (tokens, timeline, mashup usage) lives directly on Player
+rather than a room-specific subclass, per project decision. SoloRoom uses
+only tokens and timeline; the mashup field is TimelineRoom's.
 
 The network connection is represented as an opaque id rather than a live
 websocket object, so this module stays asyncio-free and easily constructible

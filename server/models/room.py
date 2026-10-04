@@ -1,9 +1,8 @@
 """GameRoom model — generic base shared by every room type.
 
-Holds only room-lifecycle data common to TimelineRoom and BuzzerRoom. The
-game-specific state machines (turn order, timelines, tokens, buzzer state,
-...) are added in rooms/timeline_room.py and rooms/buzzer_room.py in a later
-build step, not here.
+Holds only room-lifecycle data common to TimelineRoom and SoloRoom. The
+game-specific state machines (turn order, steal windows, strikes, ...) live
+in rooms/timeline_room.py and rooms/solo_room.py, not here.
 """
 
 from dataclasses import dataclass, field

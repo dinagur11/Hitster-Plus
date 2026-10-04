@@ -36,6 +36,12 @@ from server.protocol.incoming import (
     PlaceCardMessage,
     ReconnectMessage,
     SkipStealMessage,
+    SoloFinishTurnMessage,
+    SoloLeaveMessage,
+    SoloStartMessage,
+    SoloSwitchTrackMessage,
+    SoloTodayMessage,
+    SoloUseHintMessage,
     StartGameMessage,
     StealAttemptMessage,
     SwitchTrackMessage,
@@ -64,6 +70,7 @@ from server.rooms.errors import (
 )
 from server.rooms.room_manager import RoomManager
 from server.rooms.timeline_room import TimelineRoom
+from server.solo_handler import SoloHandler
 
 
 def _now() -> datetime:
@@ -84,6 +91,7 @@ class WsHandler:
         self.connection_location: dict[str, tuple[str, str]] = {}  # connection_id -> (room_code, player_id)
         self._pending_placements: dict[str, PlaceCardMessage] = {}
         self._room_timers: dict[str, asyncio.Task] = {}
+        self.solo = SoloHandler(self._send)
 
     # -- the actual per-connection entrypoint, passed to websockets.serve ----
 
@@ -427,6 +435,32 @@ class WsHandler:
 
         await self._broadcast(room, build_mashup_preview(player_id, message.guessed_year))
 
+    # -- solo runs (delegated to SoloHandler) ----------------------------------
+
+    async def _handle_solo_today(self, connection_id: str, websocket: ServerConnection, message: SoloTodayMessage) -> None:
+        await self.solo.handle_today(connection_id, websocket, message)
+
+    async def _handle_solo_start(self, connection_id: str, websocket: ServerConnection, message: SoloStartMessage) -> None:
+        await self.solo.handle_start(connection_id, websocket, message)
+
+    async def _handle_solo_finish_turn(
+        self, connection_id: str, websocket: ServerConnection, message: SoloFinishTurnMessage
+    ) -> None:
+        await self.solo.handle_finish_turn(connection_id, websocket, message)
+
+    async def _handle_solo_use_hint(
+        self, connection_id: str, websocket: ServerConnection, message: SoloUseHintMessage
+    ) -> None:
+        await self.solo.handle_use_hint(connection_id, websocket, message)
+
+    async def _handle_solo_switch_track(
+        self, connection_id: str, websocket: ServerConnection, message: SoloSwitchTrackMessage
+    ) -> None:
+        await self.solo.handle_switch_track(connection_id, websocket, message)
+
+    async def _handle_solo_leave(self, connection_id: str, websocket: ServerConnection, message: SoloLeaveMessage) -> None:
+        await self.solo.handle_leave(connection_id, websocket, message)
+
     _MESSAGE_HANDLERS: dict[type, Callable[["WsHandler", str, ServerConnection, object], Awaitable[None]]] = {}
 
     # -- broadcasting -----------------------------------------------------------
@@ -528,6 +562,7 @@ class WsHandler:
     # -- disconnect / background sweep --------------------------------------------
 
     async def _handle_disconnect(self, connection_id: str) -> None:
+        self.solo.drop(connection_id)  # a solo run dies with its connection
         self.connections.pop(connection_id, None)
         self._pending_placements.pop(connection_id, None)
         location = self.connection_location.pop(connection_id, None)
@@ -572,4 +607,10 @@ WsHandler._MESSAGE_HANDLERS = {
     SwitchTrackMessage: WsHandler._handle_switch_track,
     MashupPlacementMessage: WsHandler._handle_mashup_placement,
     MashupPreviewMessage: WsHandler._handle_mashup_preview,
+    SoloTodayMessage: WsHandler._handle_solo_today,
+    SoloStartMessage: WsHandler._handle_solo_start,
+    SoloFinishTurnMessage: WsHandler._handle_solo_finish_turn,
+    SoloUseHintMessage: WsHandler._handle_solo_use_hint,
+    SoloSwitchTrackMessage: WsHandler._handle_solo_switch_track,
+    SoloLeaveMessage: WsHandler._handle_solo_leave,
 }

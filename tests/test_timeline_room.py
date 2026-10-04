@@ -657,6 +657,27 @@ def test_switch_track_success_spends_token_discards_draws_resets_timer():
     assert room.current_player_id == "p1"
 
 
+def test_switch_track_clears_hints_granted_for_the_discarded_card():
+    # Timeline [1990, 2010]. Old card (2000) belongs in slot 1, so a hint can
+    # gray out slot 0 or 2. The replacement (1980) belongs in slot 0.
+    p1 = Player(player_id="p1", name="Alice", tokens=4, timeline=[make_card(1990, 1), make_card(2010, 2)])
+    p2 = Player(player_id="p2", name="Bob")
+    room = make_in_progress_room([p1, p2], deck=[make_card(1980, 4)], current_cards=[make_card(2000, 3)])
+
+    room.request_hint("p1", now=NOW)
+    assert len(room.hint_slots_granted) == 1
+
+    room.switch_track("p1", now=NOW)
+
+    assert room.hint_slots_granted == []
+    # A fresh hint now describes the new card: slot 0 is correct for 1980,
+    # so it can never be the one grayed out.
+    for _ in range(2):
+        granted = room.request_hint("p1", now=NOW)
+    assert set(granted) == {1, 2}
+    assert p1.tokens == 0
+
+
 def test_switch_track_rejected_outside_awaiting_placement():
     p1 = Player(player_id="p1", name="Alice", timeline=[make_card(1990, 50)], tokens=1)
     p2 = Player(player_id="p2", name="Bob", tokens=1)

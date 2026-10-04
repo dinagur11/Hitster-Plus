@@ -142,6 +142,36 @@ export interface MashupPreviewMessage {
   guessed_year: number;
 }
 
+// -- solo daily challenge (outgoing) — server/protocol/incoming.py's Solo* ------
+
+/** No fields: asks for the server's current UTC date. */
+export interface SoloTodayRequest {
+  type: "solo_today";
+}
+
+export interface SoloStartRequest {
+  type: "solo_start";
+}
+
+export interface SoloFinishTurnRequest {
+  type: "solo_finish_turn";
+  slot_index: number;
+  guessed_artist: string | null;
+  guessed_title: string | null;
+}
+
+export interface SoloUseHintRequest {
+  type: "solo_use_hint";
+}
+
+export interface SoloSwitchTrackRequest {
+  type: "solo_switch_track";
+}
+
+export interface SoloLeaveRequest {
+  type: "solo_leave";
+}
+
 export type OutgoingMessage =
   | ListThemesMessage
   | CreateRoomMessage
@@ -157,7 +187,13 @@ export type OutgoingMessage =
   | UseHintMessage
   | SwitchTrackMessage
   | MashupPlacementMessage
-  | MashupPreviewMessage;
+  | MashupPreviewMessage
+  | SoloTodayRequest
+  | SoloStartRequest
+  | SoloFinishTurnRequest
+  | SoloUseHintRequest
+  | SoloSwitchTrackRequest
+  | SoloLeaveRequest;
 
 // -- incoming (server -> client) — server/protocol/outgoing.py ---------------
 
@@ -288,6 +324,56 @@ export interface ThemesMessage {
   themes: string[];
 }
 
+// -- solo daily challenge (incoming) — server/protocol/solo_outgoing.py -------
+
+export interface SoloTodayMessage {
+  type: "solo_today";
+  /** The server's UTC date, "YYYY-MM-DD". */
+  date: string;
+}
+
+export interface SoloStartedMessage {
+  type: "solo_started";
+  date: string;
+  win_target: number;
+  max_strikes: number;
+}
+
+export type SoloResult = "won" | "out_of_strikes";
+
+/** Never carries the main queue, the reserve pool, or the current card's
+ * title/artist/year/art — current_card is redacted until its reveal. */
+export interface SoloStateMessage {
+  type: "solo_state";
+  date: string;
+  lifecycle: WireRoomLifecycle;
+  phase: "awaiting_placement" | "reveal";
+  current_card: RedactedWireCard | null;
+  timeline: WireCard[];
+  tokens: number;
+  strikes: number;
+  max_strikes: number;
+  correct_count: number;
+  win_target: number;
+  /** true = correct placement, false = strike; one per completed turn. */
+  turn_log: boolean[];
+  turn_deadline: string | null;
+  reveal_deadline: string | null;
+  grayed_out_slots: number[];
+  switch_available: boolean;
+  result: SoloResult | null;
+}
+
+export interface SoloRevealMessage {
+  type: "solo_reveal";
+  card: WireCard;
+  outcome: WireOutcome;
+  timed_out: boolean;
+  strike_added: boolean;
+  guess_bonus_earned: boolean;
+  result: SoloResult | null;
+}
+
 export type IncomingMessage =
   | JoinedMessage
   | ReconnectedMessage
@@ -299,4 +385,8 @@ export type IncomingMessage =
   | StealWindowOpenMessage
   | RevealMessage
   | HintResponseMessage
-  | ThemesMessage;
+  | ThemesMessage
+  | SoloTodayMessage
+  | SoloStartedMessage
+  | SoloStateMessage
+  | SoloRevealMessage;

@@ -358,6 +358,9 @@ class TimelineRoom(GameRoom):
         player.tokens -= SWITCH_TRACK_TOKEN_COST
         self.discard.append(self.current_cards[0])
         self.current_cards = [self.deck.pop(0)]
+        # Slots grayed out for the discarded card say nothing about its
+        # replacement, so they must not carry over.
+        self.hint_slots_granted = []
         self.switch_used_this_turn = True
         self.turn_deadline = turn_manager.compute_deadline(now, TURN_SECONDS)
 

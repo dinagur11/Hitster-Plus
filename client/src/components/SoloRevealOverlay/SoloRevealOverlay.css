@@ -1,0 +1,159 @@
+.solo-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--color-ink) 78%, transparent);
+}
+
+.solo-reveal-overlay__panel {
+  width: 26rem;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface-1);
+  border: 1px solid var(--color-brass);
+  border-radius: 1.25rem;
+  padding: 1.75rem 2rem 1.5rem;
+  box-shadow: var(--shadow-panel);
+  text-align: center;
+}
+
+.solo-reveal-overlay__panel--correct {
+  border-color: #3fbf72;
+}
+
+.solo-reveal-overlay__panel--strike {
+  border-color: #a8402f;
+}
+
+.solo-reveal-overlay__headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--color-amber);
+}
+
+.solo-reveal-overlay__panel--correct .solo-reveal-overlay__headline {
+  color: #3fbf72;
+}
+
+.solo-reveal-overlay__panel--strike .solo-reveal-overlay__headline {
+  color: #d9604a;
+}
+
+.solo-reveal-overlay__detail {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.solo-reveal-overlay__card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.9rem;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+/* The strike animation: a short horizontal shake plus a red ring pulse on
+   the revealed card itself. */
+.solo-reveal-overlay__card--strike {
+  animation:
+    solo-card-shake 0.5s ease-in-out,
+    solo-card-pulse 1.1s ease-out;
+}
+
+.solo-reveal-overlay__art {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.solo-reveal-overlay__card-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.solo-reveal-overlay__year {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: var(--color-amber);
+  line-height: 1.1;
+}
+
+.solo-reveal-overlay__title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.solo-reveal-overlay__artist {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.solo-reveal-overlay__bonus {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #3fbf72;
+}
+
+.solo-reveal-overlay__next {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+@keyframes solo-card-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-0.6rem);
+  }
+  30% {
+    transform: translateX(0.55rem);
+  }
+  45% {
+    transform: translateX(-0.45rem);
+  }
+  60% {
+    transform: translateX(0.35rem);
+  }
+  80% {
+    transform: translateX(-0.15rem);
+  }
+}
+
+@keyframes solo-card-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 96, 74, 0.85);
+    border-color: #d9604a;
+  }
+  100% {
+    box-shadow: 0 0 0 1.1rem rgba(217, 96, 74, 0);
+    border-color: var(--border-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .solo-reveal-overlay__card--strike {
+    animation: none;
+    border-color: #d9604a;
+  }
+}

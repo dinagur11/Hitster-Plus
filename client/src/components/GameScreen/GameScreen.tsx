@@ -70,7 +70,7 @@ interface GameScreenProps {
 
 const MASHUP_MIN_YEAR = 1950;
 const MASHUP_MAX_YEAR = 2025;
-const NORMAL_CLIP_SECONDS = 30; // Deezer preview clip length
+export const NORMAL_CLIP_SECONDS = 30; // Deezer preview clip length
 const MASHUP_CLIP_SECONDS = 15; // per CLAUDE.md's mashup round spec
 
 /** A per-card audio-clip countdown, entirely client-local: the server has
@@ -79,7 +79,7 @@ const MASHUP_CLIP_SECONDS = 15; // per CLAUDE.md's mashup round spec
  * card it's watching changes (a new turn, or a track switch drawing a
  * replacement) and diffs against the client's own clock exactly like the
  * turn/steal rings do. */
-function ClipCountdown({ cardId, totalSeconds, size }: { cardId: number | null; totalSeconds: number; size?: "md" | "sm" }) {
+export function ClipCountdown({ cardId, totalSeconds, size }: { cardId: number | null; totalSeconds: number; size?: "md" | "sm" }) {
   const [deadline, setDeadline] = useState<string | null>(null);
 
   useEffect(() => {
@@ -90,13 +90,13 @@ function ClipCountdown({ cardId, totalSeconds, size }: { cardId: number | null; 
   return <CountdownRing secondsRemaining={secondsRemaining} secondsTotal={totalSeconds} label="Track" size={size} />;
 }
 
-const VOLUME_STORAGE_KEY = "hitster:track-volume";
+export const VOLUME_STORAGE_KEY = "hitster:track-volume";
 
 /** Reads the viewer's last-chosen volume for this browser only — never
  * shared with the server or other players, since volume is a per-listener
  * preference, not game state. Falls back to full volume when storage is
  * unavailable (private browsing, etc.) or holds nothing yet. */
-function readStoredVolume(): number {
+export function readStoredVolume(): number {
   try {
     const raw = window.localStorage.getItem(VOLUME_STORAGE_KEY);
     if (raw === null) return 1;
@@ -127,7 +127,7 @@ function readStoredVolume(): number {
  * Game, so this doesn't come up in practice; the rejection is swallowed
  * rather than surfaced.
  */
-function TrackAudio({
+export function TrackAudio({
   previewUrl,
   cardId,
   playing,
@@ -171,7 +171,7 @@ function TrackAudio({
  * readStoredVolume) so it survives a refresh/reconnect but never leaves
  * this browser.
  */
-function VolumeControl({
+export function VolumeControl({
   volume,
   onChange,
   vertical = false,

@@ -43,12 +43,27 @@ class TimelinePhase(str, Enum):
     ROUND_END = "round_end"
 
 
-class BuzzerPhase(str, Enum):
-    """BuzzerRoom's own state machine — unrelated to TimelinePhase."""
+class SoloPhase(str, Enum):
+    """SoloRoom's own two-step turn loop — unrelated to TimelinePhase.
 
-    WAITING_FOR_ANSWERS = "waiting_for_answers"
-    REVEALING = "revealing"
-    ROUND_END = "round_end"
+    Transitions:
+        AWAITING_PLACEMENT --(finish_turn, or turn timer expiring)--> REVEAL
+        REVEAL --(reveal_deadline expires)--> AWAITING_PLACEMENT (next turn),
+            or stays put with lifecycle FINISHED once the run has ended.
+
+    There's no steal window: the placement is evaluated the moment it's
+    locked in.
+    """
+
+    AWAITING_PLACEMENT = "awaiting_placement"
+    REVEAL = "reveal"
+
+
+class SoloResult(str, Enum):
+    """How a finished SoloRoom run ended."""
+
+    WON = "won"
+    OUT_OF_STRIKES = "out_of_strikes"
 
 
 class RoundType(str, Enum):
