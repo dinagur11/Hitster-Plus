@@ -29,6 +29,14 @@
   transition: transform 0.7s ease;
 }
 
+/* Bigger than the in-game turntable: zoom scales the component's own
+   fixed rem sizes without touching the game screen's copy of it. */
+@media (min-width: 901px) {
+  .home-screen__vinyl-wrap .vinyl-player {
+    zoom: 1.2;
+  }
+}
+
 .home-screen__vinyl-wrap:hover {
   transform: scale(1.015);
 }
@@ -80,7 +88,7 @@
   color: rgba(223, 215, 200, 0.8);
   font-size: 1rem;
   line-height: 1.6;
-  margin: 0.9rem 0 2.25rem;
+  margin: 0.4rem 0 1.75rem;
 }
 
 .home-screen__actions {
@@ -146,15 +154,15 @@
 
 .home-screen__action--tertiary {
   background: none;
-  color: #a39785;
+  color: #f39c12; /* the orange of the Create game button */
   border: none;
   font-size: 0.9rem;
   padding: 0.5rem 1.5rem;
-  margin-top: 0.5rem;
+  margin-top: -0.4rem;
 }
 
 .home-screen__action--tertiary:hover {
-  color: #d4a259;
+  color: #faa825;
 }
 
 @media (max-width: 900px) {
@@ -177,6 +185,78 @@
   border-color: rgba(212, 162, 89, 0.3);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transform: none;
+}
+
+/* Inverted amber glow: dark fill, glowing amber outline (the inverse of the
+   solid orange Create game), with a lit sparkle before the label. */
+.home-screen__action--daily {
+  height: 52px;
+  padding-top: 0;
+  padding-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(20, 17, 15, 0.7);
+  color: #f8ede0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.025em;
+  border: 1.5px solid #f5a73b;
+  box-shadow:
+    0 0 14px rgba(245, 167, 59, 0.35),
+    inset 0 0 12px rgba(245, 167, 59, 0.12);
+}
+
+.home-screen__daily-sparkle {
+  color: #f5a73b;
+  font-size: 1rem;
+  filter: drop-shadow(0 0 6px rgba(245, 167, 59, 0.8));
+}
+
+.home-screen__action--daily:hover {
+  background: rgba(245, 167, 59, 0.12);
+  border-color: #ffbf5e;
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 24px rgba(245, 167, 59, 0.55),
+    inset 0 0 16px rgba(245, 167, 59, 0.2);
+}
+
+.home-screen__action--daily:active {
+  transform: translateY(1px);
+}
+
+.home-screen__action--daily:disabled:hover {
+  background: rgba(20, 17, 15, 0.7);
+  border-color: #f5a73b;
+  box-shadow:
+    0 0 14px rgba(245, 167, 59, 0.35),
+    inset 0 0 12px rgba(245, 167, 59, 0.12);
+  transform: none;
+}
+
+/* Rule with a centered label between the multiplayer buttons and the solo one. */
+.home-screen__divider {
+  width: 100%;
+  max-width: 20rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.6rem 0 0.2rem;
+}
+
+.home-screen__divider::before,
+.home-screen__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(212, 162, 89, 0.3);
+}
+
+.home-screen__divider-label {
+  font-size: 0.8rem;
+  color: #a39785;
 }
 
 .home-screen__daily-note {

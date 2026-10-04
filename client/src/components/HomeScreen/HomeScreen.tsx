@@ -43,23 +43,30 @@ export function HomeScreen({ onCreateGame, onDailyChallenge, dailyPlayed, onJoin
         <button type="button" className="home-screen__action home-screen__action--primary" onClick={onCreateGame}>
           Create game
         </button>
+        <button type="button" className="home-screen__action home-screen__action--secondary" onClick={onJoinLobby}>
+          Join lobby
+        </button>
+        <div className="home-screen__divider" role="separator">
+          <span className="home-screen__divider-label">Or play solo</span>
+        </div>
         <button
           type="button"
-          className="home-screen__action home-screen__action--secondary"
+          className="home-screen__action home-screen__action--daily"
           onClick={onDailyChallenge}
+          aria-label="Play daily challenge solo"
           disabled={dailyPlayed}
           aria-describedby={dailyPlayed ? "home-daily-note" : undefined}
         >
-          Daily challenge
+          <span className="home-screen__daily-sparkle" aria-hidden="true">
+            ✦
+          </span>
+          <span>Daily challenge</span>
         </button>
         {dailyPlayed && (
           <p id="home-daily-note" className="home-screen__daily-note">
             You've played today's challenge. A new one unlocks tomorrow.
           </p>
         )}
-        <button type="button" className="home-screen__action home-screen__action--secondary" onClick={onJoinLobby}>
-          Join lobby
-        </button>
         <button type="button" className="home-screen__action home-screen__action--tertiary" onClick={onHowToPlay}>
           How to play
         </button>
