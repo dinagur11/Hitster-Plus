@@ -2,8 +2,8 @@
 
 A browser-based multiplayer clone of the physical game Hitster — guess a
 song's release year and place it on your own shared timeline — plus a
-few original additions: a token economy, a steal mechanic, hints, a
-year-dial bonus round, and a solo daily challenge you can play right away.
+few original additions: hints, a year-dial bonus round, and a solo daily 
+challenge you can play right away.
 
 Python (`asyncio` + raw `websockets`) on the server, React (Vite) on the
 client. The server is authoritative for all game state; clients only
