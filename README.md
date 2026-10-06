@@ -2,19 +2,18 @@
 
 A browser-based multiplayer clone of the physical game Hitster — guess a
 song's release year and place it on your own shared timeline — plus a
-few original additions: hints, a year-dial bonus round, and a solo daily 
-challenge you can play right away.
+few original additions: hints, a year-dial bonus round, and a solo mode you can
+play right away.
 
 Python (`asyncio` + raw `websockets`) on the server, React (Vite) on the
 client. The server is authoritative for all game state; clients only
 render what it pushes and never compute correctness themselves.
 
-## Play alone: the Daily challenge
+## Play alone: Solo
 
-No room code and no other players needed: click **Daily challenge** on the
-home screen and you're playing in a second. Everyone gets the same songs in
-the same order each day (the date is the server's UTC date), and each browser
-gets one attempt per day.
+No room code and no other players needed: click **Solo** on the home screen
+and you're playing in a second. Every run uses a freshly shuffled deck, so
+you can play as many times as you like.
 
 - Place each song on your timeline as usual, optionally guess the artist and
   title for a bonus token, and click Finish Turn.
@@ -23,13 +22,12 @@ gets one attempt per day.
   **The 3rd strike ends it** immediately.
 - Tokens from correct artist/title guesses can be spent on a hint or a track
   switch. There's no steal window and no Dial Round.
-- When the run ends you get a result screen and a "Copy result" button that
-  copies a shareable summary (date, correct out of 15, and a green/red
-  sequence of your turns).
+- When the run ends you get a result screen, a "Copy result" button that
+  copies a shareable summary (correct out of 15 and a green/red sequence of
+  your turns), and a "Play again" button for a new run.
 
-Your daily attempt is remembered in your browser's `localStorage`, nothing is
-stored on the server. Closing the tab mid-run forfeits it, and the Daily
-challenge button stays disabled until the next UTC day.
+Nothing is stored on the server or in your browser. Closing the tab mid-run
+forfeits it.
 
 ## How to play (multiplayer)
 
@@ -53,7 +51,7 @@ server/
   rooms/
     room_manager.py        # dict[room_id, TimelineRoom], create/join/cleanup
     timeline_room.py        # the multiplayer game's turn-based state machine
-    solo_room.py             # the solo daily-challenge state machine
+    solo_room.py             # the solo-mode state machine
   protocol/
     incoming.py             # client -> server message parsing (Pydantic)
     outgoing.py              # server -> client message building (multiplayer)
@@ -67,7 +65,6 @@ server/
     mashup.py                    # dial-round (mashup) scoring
     turn_manager.py               # round-type decisions, turn advance, deadlines
     guess_matching.py             # fuzzy artist/title guess matching
-    daily.py                       # deterministic daily deck order (sha256 of date:theme:track)
   ws_handler.py                   # per-connection recv loop, dispatch, broadcast
   solo_handler.py                  # solo sessions per connection + their timers
 
@@ -120,10 +117,10 @@ pytest
 
 `tests/test_integration_live_server.py` spins up a real server and drives
 it over an actual socket; everything else tests `game_logic`/`rooms`
-directly, with no networking involved. The daily challenge is covered by
-`test_daily.py` (deterministic ordering), `test_solo_room.py` (the state
-machine, driven with an explicit `now`), `test_solo_protocol.py` (including
-that no queued/reserve card data or unrevealed card fields reach the client)
+directly, with no networking involved. Solo mode is covered by
+`test_solo_room.py` (the state machine, driven with an explicit `now` and an
+injected rng), `test_solo_protocol.py` (including that no upcoming card data
+or unrevealed card fields reach the client)
 and `test_solo_handler.py` (fake-connection round trips).
 
 The client has no test runner; check it with `cd client && npm run build`
