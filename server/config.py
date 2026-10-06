@@ -50,15 +50,15 @@ ROOM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 # of PLAYER_DISCONNECT_GRACE_SECONDS itself — just polling granularity.
 DISCONNECT_SWEEP_INTERVAL_SECONDS = 10
 
-# -- Solo daily challenge (see game_logic/daily.py, rooms/solo_room.py) ----
+# -- Solo mode (see rooms/solo_room.py) ------------------------------------
 
-# Correct placements needed to win a run (the seeded starting card doesn't count).
+# Correct placements needed to win a run (the starting card doesn't count).
 SOLO_WIN_CORRECT = 15
 # The 3rd strike ends the run immediately.
 SOLO_MAX_STRIKES = 3
-# 15 to win + up to (SOLO_MAX_STRIKES - 1) non-final strikes = 17 placements
-# at most, so every possible run fits in the main queue.
-SOLO_MAIN_QUEUE_SIZE = SOLO_WIN_CORRECT + SOLO_MAX_STRIKES - 1
-# A deck must hold start + main queue + at least this many reserve cards
-# (consumed in order by switch-track), or a solo session is refused.
-SOLO_MIN_RESERVE_CARDS = 5
+# 15 to win + up to (SOLO_MAX_STRIKES - 1) non-final strikes = 17 placements at most.
+# Spare cards on top of that cover track switches (one per turn, token-gated).
+SOLO_SWITCH_BUFFER = 5
+# 1 starting card + every placement a run can need + the switch buffer; a
+# smaller deck is refused when the run starts.
+SOLO_MIN_DECK_SIZE = 1 + (SOLO_WIN_CORRECT + SOLO_MAX_STRIKES - 1) + SOLO_SWITCH_BUFFER

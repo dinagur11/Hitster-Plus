@@ -186,9 +186,3 @@
   font-weight: 600;
   cursor: pointer;
 }
-
-.solo-end-screen__note {
-  margin: 0.5rem 0 0;
-  font-size: 0.8rem;
-  color: var(--text-faint);
-}

@@ -5,7 +5,6 @@ import { SoloGameScreen } from "../components/SoloGameScreen/SoloGameScreen";
 import { SoloRevealOverlay } from "../components/SoloRevealOverlay/SoloRevealOverlay";
 import type { ConnectionStatus } from "./GameSocket";
 import type { IncomingMessage, OutgoingMessage, SoloRevealMessage, SoloStateMessage } from "./messages";
-import { hasAttemptedDaily, recordDailyFinished, recordDailyStarted } from "./soloStorage";
 
 interface LiveSoloFlowProps {
   send: (message: OutgoingMessage) => void;
@@ -17,10 +16,10 @@ interface LiveSoloFlowProps {
 }
 
 /**
- * Drives one solo daily run off the shared socket: starts it once the
- * connection is open, renders SoloGameScreen / reveal overlay / end screen
- * from the server's solo_state + solo_reveal messages, and keeps the
- * browser's once-per-day record (see wire/soloStorage.ts).
+ * Drives solo runs off the shared socket: starts one once the connection is
+ * open, renders SoloGameScreen / reveal overlay / end screen from the
+ * server's solo_state + solo_reveal messages, and starts a fresh run (new
+ * random deck) on "Play again".
  *
  * A solo run lives and dies with its connection (no reconnect), so if the
  * socket drops mid-run this shows that the run ended rather than waiting
@@ -30,7 +29,6 @@ export function LiveSoloFlow({ send, subscribe, status, onExit }: LiveSoloFlowPr
   const [state, setState] = useState<SoloStateMessage | null>(null);
   const [reveal, setReveal] = useState<SoloRevealMessage | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [alreadyPlayed, setAlreadyPlayed] = useState(false);
   const [lostConnection, setLostConnection] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
@@ -58,15 +56,7 @@ export function LiveSoloFlow({ send, subscribe, status, onExit }: LiveSoloFlowPr
     return subscribe((message: IncomingMessage) => {
       switch (message.type) {
         case "solo_started":
-          if (hasAttemptedDaily(message.date)) {
-            // This browser already used today's attempt (e.g. the date rolled
-            // over to a day we hadn't checked): don't play it again.
-            send({ type: "solo_leave" });
-            setAlreadyPlayed(true);
-            break;
-          }
           startedRef.current = true;
-          recordDailyStarted(message.date);
           break;
         case "solo_state":
           if (!startedRef.current) break;
@@ -76,14 +66,6 @@ export function LiveSoloFlow({ send, subscribe, status, onExit }: LiveSoloFlowPr
           if (message.reveal_deadline === null) setReveal(null);
           if (message.lifecycle === "finished" && message.result !== null && !finishedRef.current) {
             finishedRef.current = true;
-            recordDailyFinished({
-              date: message.date,
-              result: message.result,
-              correct: message.correct_count,
-              strikes: message.strikes,
-              turnLog: message.turn_log,
-              timeline: message.timeline,
-            });
           }
           break;
         case "solo_reveal":
@@ -99,16 +81,15 @@ export function LiveSoloFlow({ send, subscribe, status, onExit }: LiveSoloFlowPr
     });
   }, [subscribe, send]);
 
-  if (alreadyPlayed) {
-    return (
-      <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>
-        <p>You've already played today's daily challenge. Come back tomorrow.</p>
-        <button type="button" onClick={onExit} style={{ marginTop: "1rem" }}>
-          Back to home
-        </button>
-      </div>
-    );
-  }
+  // The server replaces a finished run on solo_start, so this is all it takes.
+  const handlePlayAgain = () => {
+    setState(null);
+    setReveal(null);
+    setError(null);
+    startedRef.current = false;
+    finishedRef.current = false;
+    send({ type: "solo_start" });
+  };
 
   if (lostConnection) {
     return (
@@ -124,7 +105,7 @@ export function LiveSoloFlow({ send, subscribe, status, onExit }: LiveSoloFlowPr
   if (state === null) {
     return (
       <div style={{ padding: "2rem", color: "var(--text-muted)" }}>
-        <p>{status === "open" ? "Starting today's challenge…" : `Connecting (${status})…`}</p>
+        <p>{status === "open" ? "Starting your solo run…" : `Connecting (${status})…`}</p>
         <button type="button" onClick={onExit} style={{ marginTop: "1rem" }}>
           Back to home
         </button>
@@ -135,7 +116,7 @@ export function LiveSoloFlow({ send, subscribe, status, onExit }: LiveSoloFlowPr
   // The final reveal still plays out; the end screen takes over once the
   // server clears its deadline.
   if (state.lifecycle === "finished" && reveal === null) {
-    return <SoloEndScreen state={state} onHome={onExit} />;
+    return <SoloEndScreen state={state} onPlayAgain={handlePlayAgain} onHome={onExit} />;
   }
 
   return (

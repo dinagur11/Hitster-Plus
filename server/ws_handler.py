@@ -40,7 +40,6 @@ from server.protocol.incoming import (
     SoloLeaveMessage,
     SoloStartMessage,
     SoloSwitchTrackMessage,
-    SoloTodayMessage,
     SoloUseHintMessage,
     StartGameMessage,
     StealAttemptMessage,
@@ -437,9 +436,6 @@ class WsHandler:
 
     # -- solo runs (delegated to SoloHandler) ----------------------------------
 
-    async def _handle_solo_today(self, connection_id: str, websocket: ServerConnection, message: SoloTodayMessage) -> None:
-        await self.solo.handle_today(connection_id, websocket, message)
-
     async def _handle_solo_start(self, connection_id: str, websocket: ServerConnection, message: SoloStartMessage) -> None:
         await self.solo.handle_start(connection_id, websocket, message)
 
@@ -607,7 +603,6 @@ WsHandler._MESSAGE_HANDLERS = {
     SwitchTrackMessage: WsHandler._handle_switch_track,
     MashupPlacementMessage: WsHandler._handle_mashup_placement,
     MashupPreviewMessage: WsHandler._handle_mashup_preview,
-    SoloTodayMessage: WsHandler._handle_solo_today,
     SoloStartMessage: WsHandler._handle_solo_start,
     SoloFinishTurnMessage: WsHandler._handle_solo_finish_turn,
     SoloUseHintMessage: WsHandler._handle_solo_use_hint,

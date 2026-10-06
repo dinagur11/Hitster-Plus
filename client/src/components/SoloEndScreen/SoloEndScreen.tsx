@@ -1,25 +1,25 @@
 import { useState } from "react";
 import type { SoloStateMessage } from "../../wire/messages";
-import { buildShareText } from "../../wire/soloStorage";
+import { buildShareText } from "../../wire/soloShare";
 import "./SoloEndScreen.css";
 
 interface SoloEndScreenProps {
   /** The run's final solo_state (lifecycle "finished"). */
   state: SoloStateMessage;
+  onPlayAgain: () => void;
   onHome: () => void;
 }
 
 /**
- * Terminal screen for a daily run: result, correct count, strikes, the final
- * timeline, and a button that copies a short shareable text. No "play
- * again": there is exactly one daily attempt per browser per day, and the
- * home screen's Daily challenge button is disabled once it's used.
+ * Terminal screen for a solo run: result, correct count, strikes, the final
+ * timeline, a button that copies a short shareable text, and "Play again"
+ * for a fresh run with a new random deck.
  */
-export function SoloEndScreen({ state, onHome }: SoloEndScreenProps) {
+export function SoloEndScreen({ state, onPlayAgain, onHome }: SoloEndScreenProps) {
   const [copied, setCopied] = useState(false);
   const won = state.result === "won";
 
-  const shareText = buildShareText({ date: state.date, correct: state.correct_count, turnLog: state.turn_log }, state.win_target);
+  const shareText = buildShareText({ correct: state.correct_count, turnLog: state.turn_log }, state.win_target);
 
   const handleCopy = async () => {
     try {
@@ -41,7 +41,7 @@ export function SoloEndScreen({ state, onHome }: SoloEndScreenProps) {
       </header>
 
       <div className={`solo-end-screen__panel${won ? " solo-end-screen__panel--won" : ""}`}>
-        <span className="solo-end-screen__eyebrow">Daily challenge, {state.date}</span>
+        <span className="solo-end-screen__eyebrow">Solo</span>
         <h1 className="solo-end-screen__headline">{won ? "You won!" : "Out of strikes"}</h1>
         <p className="solo-end-screen__subhead">
           {won
@@ -79,14 +79,16 @@ export function SoloEndScreen({ state, onHome }: SoloEndScreenProps) {
         </pre>
 
         <div className="solo-end-screen__actions">
-          <button type="button" className="solo-end-screen__copy-btn" onClick={handleCopy}>
+          <button type="button" className="solo-end-screen__copy-btn" onClick={onPlayAgain}>
+            Play again
+          </button>
+          <button type="button" className="solo-end-screen__home-btn" onClick={handleCopy}>
             {copied ? "Copied" : "Copy result"}
           </button>
           <button type="button" className="solo-end-screen__home-btn" onClick={onHome}>
             Back to home
           </button>
         </div>
-        <p className="solo-end-screen__note">Come back tomorrow for a new set of songs.</p>
       </div>
     </div>
   );

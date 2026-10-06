@@ -142,12 +142,7 @@ export interface MashupPreviewMessage {
   guessed_year: number;
 }
 
-// -- solo daily challenge (outgoing) — server/protocol/incoming.py's Solo* ------
-
-/** No fields: asks for the server's current UTC date. */
-export interface SoloTodayRequest {
-  type: "solo_today";
-}
+// -- solo mode (outgoing) — server/protocol/incoming.py's Solo* ------
 
 export interface SoloStartRequest {
   type: "solo_start";
@@ -188,7 +183,6 @@ export type OutgoingMessage =
   | SwitchTrackMessage
   | MashupPlacementMessage
   | MashupPreviewMessage
-  | SoloTodayRequest
   | SoloStartRequest
   | SoloFinishTurnRequest
   | SoloUseHintRequest
@@ -324,28 +318,20 @@ export interface ThemesMessage {
   themes: string[];
 }
 
-// -- solo daily challenge (incoming) — server/protocol/solo_outgoing.py -------
-
-export interface SoloTodayMessage {
-  type: "solo_today";
-  /** The server's UTC date, "YYYY-MM-DD". */
-  date: string;
-}
+// -- solo mode (incoming) — server/protocol/solo_outgoing.py -------
 
 export interface SoloStartedMessage {
   type: "solo_started";
-  date: string;
   win_target: number;
   max_strikes: number;
 }
 
 export type SoloResult = "won" | "out_of_strikes";
 
-/** Never carries the main queue, the reserve pool, or the current card's
+/** Never carries the upcoming cards or the current card's
  * title/artist/year/art — current_card is redacted until its reveal. */
 export interface SoloStateMessage {
   type: "solo_state";
-  date: string;
   lifecycle: WireRoomLifecycle;
   phase: "awaiting_placement" | "reveal";
   current_card: RedactedWireCard | null;
@@ -386,7 +372,6 @@ export type IncomingMessage =
   | RevealMessage
   | HintResponseMessage
   | ThemesMessage
-  | SoloTodayMessage
   | SoloStartedMessage
   | SoloStateMessage
   | SoloRevealMessage;

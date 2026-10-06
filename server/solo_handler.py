@@ -10,6 +10,7 @@ the run. Sessions are in-memory only.
 """
 
 import asyncio
+import random
 import secrets
 from datetime import UTC, datetime
 from typing import Awaitable, Callable
@@ -17,19 +18,17 @@ from typing import Awaitable, Callable
 from websockets.asyncio.server import ServerConnection
 
 from server.deck.loader import load_theme
-from server.game_logic.daily import daily_order, split_daily_deck
-from server.models.enums import SoloPhase
+from server.models.enums import RoomLifecycle, SoloPhase
 from server.models.player import Player
 from server.protocol.incoming import (
     SoloFinishTurnMessage,
     SoloLeaveMessage,
     SoloStartMessage,
     SoloSwitchTrackMessage,
-    SoloTodayMessage,
     SoloUseHintMessage,
 )
 from server.protocol.outgoing import build_error
-from server.protocol.solo_outgoing import build_solo_reveal, build_solo_started, build_solo_state, build_solo_today
+from server.protocol.solo_outgoing import build_solo_reveal, build_solo_started, build_solo_state
 from server.rooms.errors import IllegalActionError
 from server.rooms.solo_room import SoloRoom
 
@@ -42,17 +41,16 @@ def _utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-def create_solo_room(date: str, cards=None, theme: str = SOLO_THEME) -> SoloRoom:
-    """Build (not start) a solo run for `date`: deterministic order, split
-    into start / queue / reserve. Raises IllegalActionError with a clear
-    message if the deck is too small."""
-    deck = cards if cards is not None else load_theme(theme)
-    try:
-        split = split_daily_deck(daily_order(deck, date, theme))
-    except ValueError as exc:
-        raise IllegalActionError(f"cannot start a solo run: {exc}") from exc
+def create_solo_room(cards=None, theme: str = SOLO_THEME, rng: random.Random | None = None) -> SoloRoom:
+    """Build (not start) a solo run over `cards` (default: the theme's deck).
+    The shuffle happens in SoloRoom.start using the room's rng; a too-small
+    deck is refused there with a clear IllegalActionError."""
+    deck = list(cards) if cards is not None else load_theme(theme)
     player = Player(player_id=secrets.token_hex(8), name="You", is_host=True)
-    return SoloRoom.from_split(f"solo-{secrets.token_hex(4)}", player, split, date, theme)
+    room = SoloRoom(room_id=f"solo-{secrets.token_hex(4)}", theme=theme, host_id=player.player_id, players=[player], deck=deck)
+    if rng is not None:
+        room.rng = rng
+    return room
 
 
 class SoloHandler:
@@ -62,18 +60,15 @@ class SoloHandler:
         self.sessions: dict[str, tuple[SoloRoom, ServerConnection]] = {}
         self._timers: dict[str, asyncio.Task] = {}
 
-    def _today(self) -> str:
-        return self._now().date().isoformat()
-
-    async def handle_today(self, connection_id: str, websocket: ServerConnection, message: SoloTodayMessage) -> None:
-        await self._send(websocket, build_solo_today(self._today()))
-
     async def handle_start(self, connection_id: str, websocket: ServerConnection, message: SoloStartMessage) -> None:
-        if connection_id in self.sessions:
-            await self._send(websocket, build_error("a solo run is already in progress"))
-            return
+        existing = self.sessions.get(connection_id)
+        if existing is not None:
+            if existing[0].lifecycle != RoomLifecycle.FINISHED:
+                await self._send(websocket, build_error("a solo run is already in progress"))
+                return
+            self.drop(connection_id)  # play again: replace the finished run
         try:
-            room = create_solo_room(self._today())
+            room = create_solo_room()
             room.start(self._now())
         except IllegalActionError as exc:
             await self._send(websocket, build_error(str(exc)))

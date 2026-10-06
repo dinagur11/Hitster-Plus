@@ -1,3 +1,4 @@
+import random
 from datetime import datetime, timedelta
 
 import pytest
@@ -6,13 +7,12 @@ from server.config import (
     GUESS_BONUS_TOKENS,
     HINT_TOKEN_COST_PER_SLOT,
     REVEAL_SECONDS,
-    SOLO_MAIN_QUEUE_SIZE,
     SOLO_MAX_STRIKES,
+    SOLO_MIN_DECK_SIZE,
     SOLO_WIN_CORRECT,
     SWITCH_TRACK_TOKEN_COST,
     TURN_SECONDS,
 )
-from server.game_logic.daily import DailySplit
 from server.models.card import Card
 from server.models.enums import RoomLifecycle, SoloPhase, SoloResult
 from server.models.player import Player
@@ -33,16 +33,43 @@ def make_card(year: int, deezer_id: int, title: str = "Song", artist: str = "Art
     )
 
 
-def make_room(reserve_size: int = 6) -> SoloRoom:
-    """Started room. Start card is 1980; queue years ascend from 1981 and
-    reserve years from 2100, so a queue card is always correct at the end
+class IdentityRng(random.Random):
+    """randrange(n) -> n - 1, which makes SoloRoom's Fisher-Yates shuffle a
+    no-op, so the deck is dealt in exactly the order the test built it."""
+
+    def randrange(self, start, stop=None, step=1):
+        return (start if stop is None else stop) - 1
+
+
+QUEUE_TURNS = SOLO_WIN_CORRECT + SOLO_MAX_STRIKES - 1
+
+
+def make_deck(spare: int = 6) -> list[Card]:
+    """Start card 1980, then QUEUE_TURNS cards with ascending years (1981...,
+    ids 100...) and `spare` more with years from 2100 (ids 500...). Dealt in
+    this order via IdentityRng, so a queue card is always correct at the end
     of the timeline (slot == len(timeline)) and wrong at slot 0."""
-    split = DailySplit(
-        start=make_card(1980, 1),
-        queue=[make_card(1981 + i, 100 + i, title=f"Queue {i}", artist=f"QArtist {i}") for i in range(SOLO_MAIN_QUEUE_SIZE)],
-        reserve=[make_card(2100 + i, 500 + i) for i in range(reserve_size)],
+    return (
+        [make_card(1980, 1)]
+        + [make_card(1981 + i, 100 + i, title=f"Queue {i}", artist=f"QArtist {i}") for i in range(QUEUE_TURNS)]
+        + [make_card(2100 + i, 500 + i) for i in range(spare)]
     )
-    room = SoloRoom.from_split("solo1", Player(player_id="p1", name="Solo"), split, "2026-01-01", "general")
+
+
+def new_room(deck: list[Card] | None = None, rng: random.Random | None = None) -> SoloRoom:
+    player = Player(player_id="p1", name="Solo")
+    return SoloRoom(
+        room_id="solo1",
+        theme="general",
+        host_id=player.player_id,
+        players=[player],
+        deck=deck if deck is not None else make_deck(),
+        rng=rng if rng is not None else IdentityRng(),
+    )
+
+
+def make_room(spare: int = 6) -> SoloRoom:
+    room = new_room(make_deck(spare))
     room.start(NOW)
     return room
 
@@ -63,7 +90,7 @@ def advance(room: SoloRoom, now=NOW) -> None:
 # -- start ---------------------------------------------------------------
 
 
-def test_start_deals_starting_card_and_first_queue_card():
+def test_start_deals_starting_card_and_first_draw():
     room = make_room()
     assert room.lifecycle == RoomLifecycle.IN_PROGRESS
     assert room.phase == SoloPhase.AWAITING_PLACEMENT
@@ -274,27 +301,27 @@ def test_hints_reset_each_turn():
 # -- switch track ----------------------------------------------------------------
 
 
-def test_switch_track_spends_token_and_draws_from_reserve_in_order():
+def test_switch_track_spends_token_and_draws_next_card_from_the_shuffled_deck():
     room = make_room()
     room.player.tokens = 2
-    first_queue_card = room.current_card
-    queue_before = list(room.queue)
+    first_card = room.current_card
+    next_in_deck = room.deck[0]
 
     room.switch_track(NOW)
 
     assert room.player.tokens == 2 - SWITCH_TRACK_TOKEN_COST
-    assert room.current_card.deezer_id == 500  # first reserve card
-    assert first_queue_card in room.discard
-    assert room.queue == queue_before  # main queue untouched
+    assert room.current_card == next_in_deck
+    assert room.current_card.deezer_id == 101
+    assert first_card in room.discard
 
 
-def test_switch_does_not_shift_what_the_queue_serves_next():
+def test_turns_after_a_switch_continue_down_the_deck():
     room = make_room()
     room.player.tokens = 1
-    room.switch_track(NOW)
-    wrong(room)  # reserve card (2100) placed at 0 is wrong
+    room.switch_track(NOW)  # discards 100, draws 101
+    correct(room)
     advance(room)
-    assert room.current_card.deezer_id == 101  # queue[1]; queue[0] was discarded by the switch
+    assert room.current_card.deezer_id == 102
 
 
 def test_second_switch_in_same_turn_rejected():
@@ -306,15 +333,15 @@ def test_second_switch_in_same_turn_rejected():
     assert room.player.tokens == 4
 
 
-def test_switch_draws_reserve_in_order_across_turns():
+def test_switch_draws_in_order_across_turns():
     room = make_room()
     room.player.tokens = 5
     room.switch_track(NOW)
-    assert room.current_card.deezer_id == 500
+    assert room.current_card.deezer_id == 101
     wrong(room)
     advance(room)
     room.switch_track(NOW)
-    assert room.current_card.deezer_id == 501
+    assert room.current_card.deezer_id == 103
 
 
 def test_switch_rejected_without_enough_tokens():
@@ -324,10 +351,11 @@ def test_switch_rejected_without_enough_tokens():
     assert room.current_card.deezer_id == 100
 
 
-def test_switch_with_empty_reserve_rejected_without_spending():
-    room = make_room(reserve_size=0)
+def test_switch_with_empty_deck_rejected_without_spending():
+    room = make_room()
+    room.deck.clear()
     room.player.tokens = 3
-    with pytest.raises(IllegalActionError, match="reserve"):
+    with pytest.raises(IllegalActionError, match="no tracks left"):
         room.switch_track(NOW)
     assert room.player.tokens == 3
 
@@ -367,8 +395,7 @@ def test_actions_rejected_during_reveal():
 
 
 def test_actions_rejected_before_start():
-    split = DailySplit(start=make_card(1980, 1), queue=[make_card(1981, 2)], reserve=[])
-    room = SoloRoom.from_split("s", Player(player_id="p", name="x"), split, "2026-01-01", "general")
+    room = new_room()
     for action in (
         lambda: room.finish_turn(0, NOW),
         lambda: room.request_hint(NOW),
@@ -392,3 +419,55 @@ def test_actions_rejected_after_run_finished():
     ):
         with pytest.raises(IllegalActionError):
             action()
+
+
+# -- random deck ------------------------------------------------------------------
+
+
+def order_after_start(rng: random.Random) -> list[int]:
+    room = new_room(rng=rng)
+    room.start(NOW)
+    return [room.player.timeline[0].deezer_id, room.current_card.deezer_id] + [c.deezer_id for c in room.deck]
+
+
+def test_different_rng_seeds_give_different_card_orders():
+    assert order_after_start(random.Random(1)) != order_after_start(random.Random(2))
+
+
+def test_same_rng_seed_gives_the_same_order_and_keeps_every_card():
+    assert order_after_start(random.Random(7)) == order_after_start(random.Random(7))
+    assert sorted(order_after_start(random.Random(7))) == sorted(c.deezer_id for c in make_deck())
+
+
+def test_shuffle_does_not_mutate_the_source_deck():
+    deck = make_deck()
+    ids_before = [c.deezer_id for c in deck]
+    new_room(deck, rng=random.Random(3)).start(NOW)
+    assert [c.deezer_id for c in deck] == ids_before
+
+
+def test_new_session_works_after_a_finished_run():
+    first = make_room()
+    for _ in range(SOLO_MAX_STRIKES):
+        wrong(first)
+        advance(first)
+    assert first.lifecycle == RoomLifecycle.FINISHED
+
+    second = new_room(rng=random.Random(5))
+    second.start(NOW)
+    assert second.lifecycle == RoomLifecycle.IN_PROGRESS
+    assert second.strikes == 0 and second.correct_count == 0 and second.turn_log == []
+    assert len(second.player.timeline) == 1
+
+
+def test_start_rejects_a_deck_smaller_than_a_full_run_needs():
+    room = new_room(make_deck()[: SOLO_MIN_DECK_SIZE - 1])
+    with pytest.raises(IllegalActionError, match="at least"):
+        room.start(NOW)
+    assert room.lifecycle == RoomLifecycle.LOBBY
+
+
+def test_start_accepts_a_deck_of_exactly_the_minimum_size():
+    room = new_room(make_deck()[:SOLO_MIN_DECK_SIZE])
+    room.start(NOW)
+    assert room.lifecycle == RoomLifecycle.IN_PROGRESS

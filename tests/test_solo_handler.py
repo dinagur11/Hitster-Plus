@@ -5,7 +5,8 @@ can be simulated without waiting."""
 import json
 from datetime import UTC, datetime, timedelta
 
-from server.config import SOLO_MAX_STRIKES, TURN_SECONDS
+from server.config import REVEAL_SECONDS, SOLO_MAX_STRIKES, SOLO_MIN_DECK_SIZE, TURN_SECONDS
+from server.models.enums import RoomLifecycle
 from server.rooms.room_manager import RoomManager
 from server.solo_handler import create_solo_room
 from server.ws_handler import WsHandler
@@ -34,44 +35,45 @@ async def send(handler: WsHandler, conn: str, ws: FakeWebSocket, payload: dict) 
     await handler._dispatch(conn, ws, json.dumps(payload))
 
 
-async def test_today_returns_server_utc_date():
-    handler, _ = make_handler()
-    ws = FakeWebSocket()
-    await send(handler, "c1", ws, {"type": "solo_today"})
-    assert ws.sent == [{"type": "solo_today", "date": "2026-03-05"}]
-
-
 async def test_start_sends_started_and_state():
     handler, _ = make_handler()
     ws = FakeWebSocket()
     await send(handler, "c1", ws, {"type": "solo_start"})
     assert ws.types_sent() == ["solo_started", "solo_state"]
-    assert ws.sent[0]["date"] == "2026-03-05"
+    assert set(ws.sent[0]) == {"type", "win_target", "max_strikes"}
     assert ws.sent[1]["current_card"].keys() == {"deezer_id", "preview_url"}
     assert len(ws.sent[1]["timeline"]) == 1
     handler.solo.drop("c1")
 
 
-async def test_run_keeps_its_date_across_midnight():
+async def test_two_sessions_get_different_card_orders():
+    handler, _ = make_handler()
+    firsts = set()
+    for conn in ("a", "b", "c"):
+        ws = FakeWebSocket()
+        await send(handler, conn, ws, {"type": "solo_start"})
+        firsts.add((ws.sent[1]["timeline"][0]["deezer_id"], ws.sent[1]["current_card"]["deezer_id"]))
+        handler.solo.drop(conn)
+    assert len(firsts) > 1
+
+
+async def test_play_again_after_a_finished_run_starts_a_fresh_run():
     handler, clock = make_handler()
     ws = FakeWebSocket()
     await send(handler, "c1", ws, {"type": "solo_start"})
-    clock.now = T0 + timedelta(minutes=5)  # now 2026-03-06 UTC
-    await send(handler, "c1", ws, {"type": "solo_use_hint"})  # rejected (no tokens), but state is unaffected
     room, _ = handler.solo.sessions["c1"]
-    assert room.date == "2026-03-05"
+    for _ in range(SOLO_MAX_STRIKES):  # slot 0 is wrong for all but a lucky card; force strikes via timeouts
+        clock.now += timedelta(seconds=TURN_SECONDS)
+        await send(handler, "c1", ws, {"type": "solo_use_hint"})
+        clock.now += timedelta(seconds=REVEAL_SECONDS)
+        room.check_timeout(clock.now)
+    assert room.lifecycle == RoomLifecycle.FINISHED
+    ws.sent.clear()
+    await send(handler, "c1", ws, {"type": "solo_start"})
+    assert ws.types_sent() == ["solo_started", "solo_state"]
+    new_room_, _ = handler.solo.sessions["c1"]
+    assert new_room_ is not room and new_room_.strikes == 0
     handler.solo.drop("c1")
-
-
-async def test_same_date_gives_same_first_card_for_every_session():
-    first_ids = []
-    for conn in ("a", "b"):
-        handler, _ = make_handler()
-        ws = FakeWebSocket()
-        await send(handler, conn, ws, {"type": "solo_start"})
-        first_ids.append((ws.sent[1]["timeline"][0]["deezer_id"], ws.sent[1]["current_card"]["deezer_id"]))
-        handler.solo.drop(conn)
-    assert first_ids[0] == first_ids[1]
 
 
 async def test_finish_turn_sends_reveal_then_state():
@@ -176,14 +178,13 @@ def test_create_solo_room_refuses_a_too_small_deck():
     from server.rooms.errors import IllegalActionError
 
     cards = [make_card(1980 + i, i) for i in range(10)]
-    with pytest.raises(IllegalActionError, match="cannot start a solo run"):
-        create_solo_room("2026-03-05", cards=cards)
+    room = create_solo_room(cards=cards)
+    with pytest.raises(IllegalActionError, match="at least"):
+        room.start(T0)
 
 
 def test_create_solo_room_uses_the_real_general_deck():
-    room = create_solo_room("2026-03-05")
+    room = create_solo_room()
     room.start(T0)
-    assert room.date == "2026-03-05"
-    assert len(room.queue) == 16  # 17 minus the card drawn for turn one
-    assert len(room.reserve) >= 5
+    assert len(room.deck) + 2 >= SOLO_MIN_DECK_SIZE  # start card + current card drawn
     assert SOLO_MAX_STRIKES == 3

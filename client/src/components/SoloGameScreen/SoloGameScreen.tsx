@@ -24,7 +24,7 @@ interface SoloGameScreenProps {
 }
 
 /**
- * The solo daily-challenge game screen. Deliberately a sibling of
+ * The solo game screen. Deliberately a sibling of
  * GameScreen rather than a mode of it: one player, no steal window, no
  * mashup, no players panel. It composes the same leaf pieces (vinyl,
  * NormalTimeline, YouPanel, countdown ring, audio/volume) and reuses
@@ -113,8 +113,7 @@ export function SoloGameScreen({ state, revealing, onFinishTurn, onUseHint, onSw
         <main className="game-screen__main">
           <div className="game-screen__turn-row">
             <div className="game-screen__player-strip">
-              <span className="game-screen__player-name">Daily challenge</span>
-              <span className="game-screen__player-meta">{state.date}</span>
+              <span className="game-screen__player-name">Solo</span>
             </div>
             {awaiting && <CountdownRing secondsRemaining={secondsRemaining} secondsTotal={TURN_SECONDS} />}
           </div>

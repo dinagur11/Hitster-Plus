@@ -6,7 +6,7 @@ A browser-based multiplayer clone of the physical game Hitster (guess a song's
 release year and place it on a shared timeline), built as a portfolio project.
 Python backend (asyncio + websockets), React frontend. Original mechanics plus
 custom additions: token economy, steal mechanic, hint system, a "mashup"
-bonus round, and a solo daily-challenge mode (play alone, no room code).
+bonus round, and a replayable solo mode (play alone, no room code).
 
 ## Tech stack
 
@@ -35,7 +35,7 @@ variants of one state machine:
 
 - **Multiplayer** (`TimelineRoom`) — the main game: turns, timelines, tokens,
   steal mechanic, mashup rounds. Created and tracked by `RoomManager`.
-- **Solo** (`SoloRoom`) — the daily challenge: one player, no turn order, no
+- **Solo** (`SoloRoom`) — solo mode: one player, no turn order, no
   steal window, no mashup rounds; strikes and a 15-correct win. Has its own
   phase enum (`SoloPhase`) and its own handler (`solo_handler.py`); it is not
   stored in `RoomManager`. Shares only the `Card`/`Player` models, the
@@ -59,7 +59,7 @@ server/
   rooms/
     room_manager.py       # dict[room_id, TimelineRoom], create/join/cleanup
     timeline_room.py       # multiplayer state machine
-    solo_room.py            # solo daily-challenge state machine
+    solo_room.py            # solo-mode state machine
     errors.py                # IllegalActionError and friends
   protocol/
     incoming.py            # parse/validate client→server JSON (Pydantic), incl. solo_* messages
@@ -74,7 +74,6 @@ server/
     mashup.py                  # mashup round scoring (±10yr check)
     turn_manager.py             # round type decisions, turn advance, timers
     guess_matching.py           # fuzzy artist/title guess matching (rapidfuzz)
-    daily.py                      # deterministic daily deck order + start/queue/reserve split
   ws_handler.py                 # per-connection recv loop, dispatch to multiplayer rooms
   solo_handler.py                # solo sessions per connection + their deadline timers
 client/                          # React (Vite) app; src/components/, src/wire/
@@ -143,9 +142,16 @@ relative ordering) — within ±10 years of the real year = card kept; an exact
 year guess additionally earns a bonus token. No steal mechanic on this round.
 All artist/title/year info is revealed at the end regardless of outcome.
 
-**Solo daily challenge (`SoloRoom`):** a single player can start a run from
-the home screen with no room code. Settled rules:
+**Solo mode (`SoloRoom`):** a single player can start a run from the home
+screen with no room code, and can play as many runs as they like. Settled rules:
 
+- Deck: at `start`, the room shuffles a copy of the `general` deck using its
+  injectable `rng` (Fisher-Yates over `rng.randrange`, same pattern and reason
+  as `TimelineRoom._deal_starting_cards`, so tests can make it deterministic).
+  The first card is the starting card; each turn draws the next card in order.
+  A deck smaller than `SOLO_MIN_DECK_SIZE` (1 starting card + 17 placements,
+  the most a run can take, + `SOLO_SWITCH_BUFFER` spare cards for switches) is
+  refused with a clear error.
 - Start: the player begins with one revealed card on their timeline (same as
   the multiplayer starting card). Starting tokens are 0, same as multiplayer.
 - Loop: hear a song, place it into a slot (slot-snapping `NormalTimeline`,
@@ -162,32 +168,17 @@ the home screen with no room code. Settled rules:
   independent of placement correctness.
 - Tokens are only spent on hint (same rules and cost as multiplayer) and
   switch track (`SWITCH_TRACK_TOKEN_COST`, once per turn, resets the timer,
-  clears that turn's grayed slots; draws the next card from the reserve pool).
-  No steal window, no steal phases/messages, no mashup rounds.
+  clears that turn's grayed slots; draws the next card from the shuffled
+  deck). No steal window, no steal phases/messages, no mashup rounds.
+- End screen: final timeline, result, correct count out of 15, strikes used,
+  a "Copy result" button (mode name, correct/15, per-turn sequence of correct
+  placements and strikes), "Play again" (a fresh `solo_start`, new random
+  deck; the server replaces a finished session) and a way back home.
 - Disconnecting forfeits the run: no reconnect token, no grace period.
-- Server is authoritative and never sends the main queue, the reserve pool, or
-  the current card's title/artist/year/art before its reveal (only a redacted
-  card). `solo_state.switch_available` is a boolean, not the pool.
-
-*Daily seed (implement exactly this way):* the **server** decides the date —
-the current UTC date as `"YYYY-MM-DD"`, captured once when the session is
-created (a run crossing midnight UTC keeps its original date). The deck
-(`general` theme) is ordered by `game_logic/daily.py`'s pure
-`daily_order(cards, date, theme)`: sort cards by
-`sha256(f"{date}:{theme}:{track_id}")` hex digest, where `track_id` is
-`str(card.deezer_id)`. No `random`, no `hash()`. The ordered list splits into:
-index 0 = starting card; indices 1..17 = main queue (15 to win + up to 2
-non-final strikes = at most 17 placements, so every run fits); the rest =
-reserve pool, consumed in order by switch-track and never shifting the queue.
-A deck too small for start + queue + `SOLO_MIN_RESERVE_CARDS` is refused with a
-clear error.
-
-*Persistence:* one daily attempt per browser per date, in `localStorage`
-(`wire/soloStorage.ts`), keyed by the date string the **server** sent, never
-the client's clock. The attempt is recorded when the run starts, so forfeiting
-(closing the tab) still uses it. Once used, the home screen's "Daily
-challenge" button is disabled. There is no practice mode and no streak. No
-server persistence, consistent with the no-DB rule.
+- Server is authoritative and never sends upcoming cards or the current
+  card's title/artist/year/art before its reveal (only a redacted card).
+  `solo_state.switch_available` is a boolean, not the deck. No dates, no
+  `localStorage`, no server persistence, consistent with the no-DB rule.
 
 **Disconnection handling (multiplayer):** No special pause/grace logic mid-turn — the
 existing 75s timer already absorbs brief drops; if it expires before
@@ -274,6 +265,15 @@ timeline with the locked original slot and open stealable slots), hint UI
 a placement opens the steal window first; nothing gets evaluated or
 revealed until after that window closes (`PENDING_REVEAL` → `REVEAL`), so
 no immediate "locked in, here's your score" moment on click.
+
+## Deferred to later versions
+
+Optional ideas, not planned:
+
+- A daily challenge: same solo rules, but cards ordered by sorting the deck on
+  `sha256(f"{date}:{theme}:{track_id}")` with a server-side UTC date, plus a
+  once-per-day limit.
+- A streak counter.
 
 ## Build order (don't skip ahead)
 

@@ -9,22 +9,21 @@ from server.protocol.incoming import (
     SoloLeaveMessage,
     SoloStartMessage,
     SoloSwitchTrackMessage,
-    SoloTodayMessage,
     SoloUseHintMessage,
     parse_incoming,
 )
-from server.protocol.solo_outgoing import build_solo_reveal, build_solo_started, build_solo_state, build_solo_today
+from server.protocol.solo_outgoing import build_solo_reveal, build_solo_started, build_solo_state
 from tests.test_solo_room import NOW, correct, make_room, wrong
 
 SECRET_FIELDS = ("title", "artist", "release_year", "album_art_url")
 
 
 def all_messages(room):
-    return [build_solo_today("2026-01-01"), build_solo_started(room), build_solo_state(room)]
+    return [build_solo_started(room), build_solo_state(room)]
 
 
-def reserve_and_queue_ids(room) -> set[int]:
-    return {c.deezer_id for c in room.queue + room.reserve}
+def upcoming_ids(room) -> set[int]:
+    return {c.deezer_id for c in room.deck}
 
 
 # -- incoming ---------------------------------------------------------------
@@ -33,7 +32,6 @@ def reserve_and_queue_ids(room) -> set[int]:
 @pytest.mark.parametrize(
     "payload, expected",
     [
-        ({"type": "solo_today"}, SoloTodayMessage),
         ({"type": "solo_start"}, SoloStartMessage),
         ({"type": "solo_finish_turn", "slot_index": 2}, SoloFinishTurnMessage),
         ({"type": "solo_use_hint"}, SoloUseHintMessage),
@@ -61,17 +59,17 @@ def test_state_current_card_is_redacted():
     assert set(state["current_card"]) == {"deezer_id", "preview_url"}
 
 
-def test_no_queue_or_reserve_data_in_any_outgoing_message():
+def test_no_upcoming_card_data_in_any_outgoing_message():
     room = make_room()
-    secret_ids = reserve_and_queue_ids(room) - {room.current_card.deezer_id}
-    # The queue's titles/artists are distinctive ("Queue N"/"QArtist N").
+    secret_ids = upcoming_ids(room) - {room.current_card.deezer_id}
+    # The deck's titles/artists are distinctive ("Queue N"/"QArtist N").
     for message in all_messages(room):
         text = json.dumps(message)
         assert "Queue " not in text and "QArtist" not in text
         for card_id in secret_ids:
             assert f'"deezer_id": {card_id}' not in text
     state = build_solo_state(room)
-    assert "queue" not in state and "reserve" not in state
+    assert "deck" not in state and "queue" not in state and "reserve" not in state
     assert state["switch_available"] is True  # a boolean, not the pool
 
 
@@ -100,7 +98,7 @@ def test_reveal_exposes_only_the_just_played_card():
     assert reveal["card"]["deezer_id"] == played.deezer_id
     assert reveal["card"]["release_year"] == played.release_year
     assert reveal["outcome"] == "correct"
-    leaked = {c.deezer_id for c in room.queue + room.reserve}
+    leaked = upcoming_ids(room)
     text = json.dumps([reveal, build_solo_state(room)])
     for card_id in leaked:
         assert f'"deezer_id": {card_id}' not in text.replace(f'"deezer_id": {played.deezer_id}', "")

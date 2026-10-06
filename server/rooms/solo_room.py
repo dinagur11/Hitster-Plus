@@ -1,8 +1,8 @@
-"""SoloRoom — the solo daily-challenge state machine.
+"""SoloRoom — the solo-mode state machine.
 
 A separate room type from TimelineRoom, not a flag inside it: one player, no
 turn order, no steal window, no mashup rounds. The rules live in CLAUDE.md
-("Solo daily challenge"); in short, place songs on your own timeline, get a
+("Solo mode"); in short, place songs on your own timeline, get a
 strike for every wrong placement or timed-out turn, win at SOLO_WIN_CORRECT
 correct placements, lose on the SOLO_MAX_STRIKES-th strike.
 
@@ -12,10 +12,9 @@ simulated in tests. Each state-changing method first applies any expired
 deadline (`_maybe_expire`), then checks lifecycle/phase and raises
 IllegalActionError on a mismatch.
 
-The deck is pre-split by game_logic/daily.py: the starting card is dealt in
-`start`, `queue` supplies one card per turn in order, and `reserve` is drawn
-from only by switch_track — so a switch never shifts what the main queue
-will serve next.
+`deck` is the full card pool. `start` shuffles a copy using the room's
+injectable rng, deals the first card as the starting card, and every turn
+(and every switch_track) then draws the next card from the shuffled order.
 """
 
 import random
@@ -28,12 +27,12 @@ from server.config import (
     MAX_HINT_SLOTS,
     REVEAL_SECONDS,
     SOLO_MAX_STRIKES,
+    SOLO_MIN_DECK_SIZE,
     SOLO_WIN_CORRECT,
     SWITCH_TRACK_TOKEN_COST,
     TURN_SECONDS,
 )
 from server.game_logic import guess_matching, hints, placement, turn_manager
-from server.game_logic.daily import DailySplit
 from server.models.card import Card
 from server.models.enums import RoomLifecycle, SoloPhase, SoloResult
 from server.models.player import Player
@@ -57,12 +56,9 @@ class SoloRevealSummary:
 @dataclass
 class SoloRoom(GameRoom):
     phase: SoloPhase = SoloPhase.AWAITING_PLACEMENT
-    # The UTC date ("YYYY-MM-DD") the deck order was seeded with, captured
-    # once when the session was created — a run crossing midnight keeps it.
-    date: str = ""
-    queue: list[Card] = field(default_factory=list)
-    reserve: list[Card] = field(default_factory=list)
-    start_card: Card | None = None
+    # Unshuffled pool handed in at creation; `start` replaces it with a
+    # shuffled copy minus the starting card, drawn from the front.
+    deck: list[Card] = field(default_factory=list)
     discard: list[Card] = field(default_factory=list)
     current_card: Card | None = None
     strikes: int = 0
@@ -78,19 +74,6 @@ class SoloRoom(GameRoom):
     last_reveal: SoloRevealSummary | None = None
     rng: random.Random = field(default_factory=random.Random)
 
-    @classmethod
-    def from_split(cls, room_id: str, player: Player, split: DailySplit, date: str, theme: str) -> "SoloRoom":
-        return cls(
-            room_id=room_id,
-            theme=theme,
-            host_id=player.player_id,
-            players=[player],
-            date=date,
-            start_card=split.start,
-            queue=list(split.queue),
-            reserve=list(split.reserve),
-        )
-
     @property
     def player(self) -> Player:
         return self.players[0]
@@ -100,19 +83,37 @@ class SoloRoom(GameRoom):
     def start(self, now: datetime) -> None:
         if self.lifecycle != RoomLifecycle.LOBBY:
             raise IllegalActionError("run already started")
-        if len(self.players) != 1 or self.start_card is None:
-            raise IllegalActionError("a solo run needs exactly one player and a starting card")
+        if len(self.players) != 1:
+            raise IllegalActionError("a solo run needs exactly one player")
+        if len(self.deck) < SOLO_MIN_DECK_SIZE:
+            raise IllegalActionError(
+                f"deck has {len(self.deck)} cards; a solo run needs at least {SOLO_MIN_DECK_SIZE} "
+                "(1 starting card + the placements a full run can take + a buffer for track switches)"
+            )
 
         self.lifecycle = RoomLifecycle.IN_PROGRESS
-        self.player.timeline = [self.start_card]
+        self.deck = self._shuffled(self.deck)
+        self.player.timeline = [self.deck.pop(0)]
         self._start_turn(now)
 
+    def _shuffled(self, cards: list[Card]) -> list[Card]:
+        """Fisher-Yates over a copy, using randrange (like
+        TimelineRoom._deal_starting_cards) rather than rng.shuffle: shuffle()
+        calls _randbelow/getrandbits under the hood, not randrange, so a
+        test's seeded/overridden rng (which only overrides randrange) wouldn't
+        actually make it deterministic otherwise."""
+        order = list(cards)
+        for i in range(len(order) - 1, 0, -1):
+            j = self.rng.randrange(i + 1)
+            order[i], order[j] = order[j], order[i]
+        return order
+
     def _start_turn(self, now: datetime) -> None:
-        if not self.queue:
-            # Unreachable by construction (the queue holds every card a run
-            # can consume), but fail loudly rather than serve nothing.
-            raise IllegalActionError("main queue exhausted")
-        self.current_card = self.queue.pop(0)
+        if not self.deck:
+            # Unreachable by construction (SOLO_MIN_DECK_SIZE covers every
+            # card a run can consume), but fail loudly rather than serve nothing.
+            raise IllegalActionError("deck exhausted")
+        self.current_card = self.deck.pop(0)
         self.hint_slots_granted = []
         self.switch_used_this_turn = False
         self.reveal_deadline = None
@@ -176,8 +177,8 @@ class SoloRoom(GameRoom):
 
     def switch_track(self, now: datetime) -> None:
         """Spend a token to discard the current song and draw the next
-        reserve card. Once per turn, resets the turn timer. An empty
-        reserve rejects cleanly without spending a token."""
+        card from the shuffled deck. Once per turn, resets the turn timer. An
+        empty deck rejects cleanly without spending a token."""
         self._maybe_expire(now)
         self._require_awaiting_placement()
         if self.switch_used_this_turn:
@@ -186,12 +187,12 @@ class SoloRoom(GameRoom):
         player = self.player
         if player.tokens < SWITCH_TRACK_TOKEN_COST:
             raise IllegalActionError("not enough tokens to switch tracks")
-        if not self.reserve:
-            raise IllegalActionError("no reserve tracks left, cannot switch tracks")
+        if not self.deck:
+            raise IllegalActionError("no tracks left, cannot switch tracks")
 
         player.tokens -= SWITCH_TRACK_TOKEN_COST
         self.discard.append(self.current_card)
-        self.current_card = self.reserve.pop(0)
+        self.current_card = self.deck.pop(0)
         self.hint_slots_granted = []
         self.switch_used_this_turn = True
         self.turn_deadline = turn_manager.compute_deadline(now, TURN_SECONDS)

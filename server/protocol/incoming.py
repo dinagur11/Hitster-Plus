@@ -130,17 +130,9 @@ class MashupPreviewMessage(BaseModel):
     guessed_year: int
 
 
-class SoloTodayMessage(BaseModel):
-    """No fields: asks the server for today's UTC date ("YYYY-MM-DD") so the
-    home screen can tell whether this browser already played today's daily
-    challenge — the client never uses its own clock for that."""
-
-    type: Literal["solo_today"] = "solo_today"
-
-
 class SoloStartMessage(BaseModel):
-    """No fields: starts a solo daily-challenge run for this connection.
-    The server picks the date (current UTC date) and the deck order."""
+    """No fields: starts a solo run for this connection. The server
+    shuffles the deck."""
 
     type: Literal["solo_start"] = "solo_start"
 
@@ -188,7 +180,6 @@ IncomingMessage = Annotated[
         SwitchTrackMessage,
         MashupPlacementMessage,
         MashupPreviewMessage,
-        SoloTodayMessage,
         SoloStartMessage,
         SoloFinishTurnMessage,
         SoloUseHintMessage,

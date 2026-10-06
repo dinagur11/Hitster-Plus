@@ -1,3 +1,7 @@
+import yourTurnImg from "../../assets/how-to-play/your-turn.png";
+import stealWindowImg from "../../assets/how-to-play/steal-window.png";
+import dialRoundImg from "../../assets/how-to-play/dial-round.png";
+import soloImg from "../../assets/how-to-play/solo.png";
 import "./HowToPlayScreen.css";
 
 interface HowToPlayScreenProps {
@@ -8,6 +12,7 @@ interface HowToPlayScreenProps {
 interface Section {
   heading: string;
   body: string[];
+  screenshot?: { src: string; alt: string };
 }
 
 const SECTIONS: Section[] = [
@@ -25,6 +30,10 @@ const SECTIONS: Section[] = [
       "You can optionally type a guess for the artist and title for a bonus token if you get both right.",
       "You have 75 seconds total for listening, placing, and guessing. Nothing locks in until you click Finish Turn — you're free to re-drag the card as many times as you like before then.",
     ],
+    screenshot: {
+      src: yourTurnImg,
+      alt: "A turn in progress: the mystery card above the player's timeline, one empty slot highlighted, one slot grayed out by a hint, and the Finish turn button below.",
+    },
   },
   {
     heading: "The steal window",
@@ -33,6 +42,10 @@ const SECTIONS: Section[] = [
       "Each gap can only be attempted once — first come, first served — but different players can go for different gaps at the same time. Stealing costs a token.",
       "Nothing is revealed until the steal window closes — then everyone finds out who (if anyone) placed it correctly.",
     ],
+    screenshot: {
+      src: stealWindowImg,
+      alt: "The steal window on another player's timeline, with one gap selected and a Confirm button that costs one token.",
+    },
   },
   {
     heading: "Tokens",
@@ -49,14 +62,22 @@ const SECTIONS: Section[] = [
       "Once per game, one of your turns becomes a Dial Round instead — you'll know because you'll place the card on a year dial instead of the usual gap-based timeline.",
       "Guess the song's exact release year: within 10 years keeps the card, and an exact guess also earns a bonus token. There's no steal window on a Dial Round.",
     ],
+    screenshot: {
+      src: dialRoundImg,
+      alt: "A Dial Round: a year dial set to 1988 with a Submit guess button.",
+    },
   },
   {
-    heading: "Daily challenge",
+    heading: "Solo",
     body: [
-      "Want to play alone? The Daily challenge needs no room code and no other players. Everyone gets the same songs in the same order each day (UTC), and you get one attempt per day.",
+      "Want to play alone? Solo needs no room code and no other players, and you can play as many runs as you like. Each run is a fresh, randomly shuffled deck.",
       "Place each song on your timeline as usual. A wrong placement, or running out of time, costs a strike. Get 15 correct to win; the third strike ends your run.",
-      "Guessing the artist and title earns tokens, which you can spend on a hint or a track switch. There's no steal window and no Dial Round in the Daily challenge.",
+      "Guessing the artist and title earns tokens, which you can spend on a hint or a track switch. There's no steal window and no Dial Round in Solo.",
     ],
+    screenshot: {
+      src: soloImg,
+      alt: "Solo mode: tokens, a 0 of 15 correct counter, three empty strike markers and the same placement timeline.",
+    },
   },
 ];
 
@@ -82,6 +103,14 @@ export function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
           {SECTIONS.map((section) => (
             <section key={section.heading} className="how-to-play-screen__section">
               <h2 className="how-to-play-screen__section-heading">{section.heading}</h2>
+              {section.screenshot && (
+                <img
+                  className="how-to-play-screen__screenshot"
+                  src={section.screenshot.src}
+                  alt={section.screenshot.alt}
+                  loading="lazy"
+                />
+              )}
               {section.body.map((paragraph) => (
                 <p key={paragraph} className="how-to-play-screen__section-text">
                   {paragraph}

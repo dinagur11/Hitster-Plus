@@ -8,7 +8,7 @@ interface YouPanelProps {
    * the viewing player is also the acting player — passed in rather than
    * read straight off `viewingPlayer.tokens` so that stays true here too. */
   tokens: number;
-  /** Solo daily-challenge mode only: swaps "turns taken" for
+  /** Solo mode only: swaps "turns taken" for
    * "correct: N / target" and adds the strike indicators. Omitted in
    * multiplayer, where neither is shown. */
   solo?: { strikes: number; maxStrikes: number; correct: number; winTarget: number };

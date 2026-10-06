@@ -3,11 +3,8 @@ import "./HomeScreen.css";
 
 interface HomeScreenProps {
   onCreateGame: () => void;
-  /** Starts the solo daily challenge — no room code, no other players. */
-  onDailyChallenge: () => void;
-  /** True once this browser has used today's attempt (finished or
-   * forfeited): the Daily challenge button is then disabled. */
-  dailyPlayed: boolean;
+  /** Starts a solo run — no room code, no other players. */
+  onSolo: () => void;
   onJoinLobby: () => void;
   onHowToPlay: () => void;
 }
@@ -19,10 +16,10 @@ interface HomeScreenProps {
  * each screen's onWordmarkClick) — this is the one place it's just static
  * text, since clicking it while already home would do nothing.
  *
- * "Daily challenge" starts a solo run (see wire/LiveSoloFlow.tsx); it's
+ * "Solo" starts a run (see wire/LiveSoloFlow.tsx); it's
  * disabled once the day's single attempt has been used.
  */
-export function HomeScreen({ onCreateGame, onDailyChallenge, dailyPlayed, onJoinLobby, onHowToPlay }: HomeScreenProps) {
+export function HomeScreen({ onCreateGame, onSolo, onJoinLobby, onHowToPlay }: HomeScreenProps) {
   return (
     <div className="home-screen">
       <div className="home-screen__vinyl-wrap">
@@ -51,22 +48,15 @@ export function HomeScreen({ onCreateGame, onDailyChallenge, dailyPlayed, onJoin
         </div>
         <button
           type="button"
-          className="home-screen__action home-screen__action--daily"
-          onClick={onDailyChallenge}
-          aria-label="Play daily challenge solo"
-          disabled={dailyPlayed}
-          aria-describedby={dailyPlayed ? "home-daily-note" : undefined}
+          className="home-screen__action home-screen__action--solo"
+          onClick={onSolo}
+          aria-label="Play solo"
         >
-          <span className="home-screen__daily-sparkle" aria-hidden="true">
+          <span className="home-screen__solo-sparkle" aria-hidden="true">
             ✦
           </span>
-          <span>Daily challenge</span>
+          <span>Solo</span>
         </button>
-        {dailyPlayed && (
-          <p id="home-daily-note" className="home-screen__daily-note">
-            You've played today's challenge. A new one unlocks tomorrow.
-          </p>
-        )}
         <button type="button" className="home-screen__action home-screen__action--tertiary" onClick={onHowToPlay}>
           How to play
         </button>

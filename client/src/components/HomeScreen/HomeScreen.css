@@ -189,7 +189,7 @@
 
 /* Inverted amber glow: dark fill, glowing amber outline (the inverse of the
    solid orange Create game), with a lit sparkle before the label. */
-.home-screen__action--daily {
+.home-screen__action--solo {
   height: 52px;
   padding-top: 0;
   padding-bottom: 0;
@@ -208,13 +208,13 @@
     inset 0 0 12px rgba(245, 167, 59, 0.12);
 }
 
-.home-screen__daily-sparkle {
+.home-screen__solo-sparkle {
   color: #f5a73b;
   font-size: 1rem;
   filter: drop-shadow(0 0 6px rgba(245, 167, 59, 0.8));
 }
 
-.home-screen__action--daily:hover {
+.home-screen__action--solo:hover {
   background: rgba(245, 167, 59, 0.12);
   border-color: #ffbf5e;
   transform: translateY(-2px);
@@ -223,11 +223,11 @@
     inset 0 0 16px rgba(245, 167, 59, 0.2);
 }
 
-.home-screen__action--daily:active {
+.home-screen__action--solo:active {
   transform: translateY(1px);
 }
 
-.home-screen__action--daily:disabled:hover {
+.home-screen__action--solo:disabled:hover {
   background: rgba(20, 17, 15, 0.7);
   border-color: #f5a73b;
   box-shadow:
@@ -259,9 +259,3 @@
   color: #a39785;
 }
 
-.home-screen__daily-note {
-  margin: -0.3rem 0 0;
-  font-size: 0.8rem;
-  color: #a39785;
-  max-width: 20rem;
-}
